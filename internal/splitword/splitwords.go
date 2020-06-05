@@ -13,9 +13,10 @@ type wordsWrapper struct {
 	words []string
 }
 
-// SplitWords splits input file's text content into word counter.
+// SplitWords splits input file's text content into concordance.
+// A concordance is a counter of every word that occurs in the document.
 func SplitWords(fn string) (map[string]uint32, error) {
-	wordCounter := make(map[string]uint32)
+	concordance := make(map[string]uint32)
 
 	fd, err := os.Open(fn)
 	if err != nil {
@@ -30,7 +31,7 @@ func SplitWords(fn string) (map[string]uint32, error) {
 		for x := range wordsCh {
 			for _, w := range x.words {
 				if _, ok := stopword.EnStopWords[strings.ToLower(w)]; !ok {
-					wordCounter[strings.ToLower(w)]++
+					concordance[strings.ToLower(w)]++
 				}
 			}
 		}
@@ -49,5 +50,5 @@ func SplitWords(fn string) (map[string]uint32, error) {
 
 	<-exit
 
-	return wordCounter, err
+	return concordance, err
 }
