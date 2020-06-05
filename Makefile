@@ -10,9 +10,6 @@ build: $(ALL_TARGETS)
 $(TARGETS): $(SRC)
 	go build -ldflags '$(LDFLAGS)' $(GOMODULEPATH)/$(PROJECT)/cmd/$@
 
-lint:
-	@golangci-lint run --skip-dirs=api/ch,api/oplog --deadline=5m
-
 test:
 	go test -count=1 -v -p 1 $(shell go list ./...)
 
