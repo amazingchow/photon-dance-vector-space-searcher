@@ -6,7 +6,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/amazingchow/engine-vector-space-indexing-service/internal/stopword"
+	"github.com/amazingchow/engine-vector-space-search-service/internal/stopword"
 )
 
 type wordsWrapper struct {

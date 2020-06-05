@@ -1,6 +1,6 @@
-PROJECT     := github.com/amazingchow/engine-vector-space-indexing-service
+PROJECT     := github.com/amazingchow/engine-vector-space-search-service
 SRC         := $(shell find . -type f -name '*.go' -not -path "./vendor/*")
-TARGETS     := engine-vector-space-indexing-service
+TARGETS     := engine-vector-space-search-service
 ALL_TARGETS := $(TARGETS)
 
 all: build
