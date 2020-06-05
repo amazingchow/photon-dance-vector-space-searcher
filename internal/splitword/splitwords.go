@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 	"unicode"
+
+	"github.com/amazingchow/engine-vector-space-indexing-service/internal/stopword"
 )
 
 type wordsWrapper struct {
@@ -27,7 +29,9 @@ func SplitWords(fn string) (map[string]uint32, error) {
 	go func() {
 		for x := range wordsCh {
 			for _, w := range x.words {
-				wordCounter[strings.ToLower(w)]++
+				if _, ok := stopword.EnStopWords[strings.ToLower(w)]; !ok {
+					wordCounter[strings.ToLower(w)]++
+				}
 			}
 		}
 		exit <- struct{}{}
