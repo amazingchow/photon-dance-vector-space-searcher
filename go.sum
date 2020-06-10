@@ -1,7 +1,11 @@
+github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d h1:ir/IFJU5xbja5UaBEQLjcvn7aAU01nqU/NUyOBEU+ew=
+github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d/go.mod h1:PRWNwWq0yifz6XDPZu48aSld8BWwBfr2JKB2bGWiEd4=
 github.com/amazingchow/engine-vector-space-indexing-service v0.0.0-20200605093435-354aaaa314a5 h1:Jymf/BqBPotrZ8Oy6czWWTwYSqfVVvxv5h3NFE5eWCQ=
 github.com/amazingchow/engine-vector-space-indexing-service v0.0.0-20200605093435-354aaaa314a5/go.mod h1:ilZjNwpwWZzAbFeb99SPOVK0GJb15C2cYoFZVFVyTgY=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/huichen/sego v0.0.0-20180617034105-3f3c8a8cfacc h1:3LXYtoxQGFSjIL5ZJAn4PceSpwRohuTKYL1W4kJ7G8g=
+github.com/huichen/sego v0.0.0-20180617034105-3f3c8a8cfacc/go.mod h1:+/Bm7uk1bnJJMi9l6P88FgHeGtscOQiYbxW1j+BmgBY=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
