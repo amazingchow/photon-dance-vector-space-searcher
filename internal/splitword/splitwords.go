@@ -13,9 +13,9 @@ type wordsWrapper struct {
 	words []string
 }
 
-// SplitWords splits input file's text content into concordance.
+// SplitEnWords splits input English text into concordance.
 // A concordance is a counter of every word that occurs in the document.
-func SplitWords(fn string) (map[string]uint32, error) {
+func SplitEnWords(fn string) (map[string]uint32, error) {
 	concordance := make(map[string]uint32)
 
 	fd, err := os.Open(fn)

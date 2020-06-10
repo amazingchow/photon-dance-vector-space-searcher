@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSplitWords(t *testing.T) {
-	w, err := SplitWords("fixtures/input.text")
+func TestSplitEnWords(t *testing.T) {
+	w, err := SplitEnWords("fixtures/input_en.text")
 	assert.Empty(t, err)
 	t.Logf("gutenberg: %d", w["gutenberg"])
 }
