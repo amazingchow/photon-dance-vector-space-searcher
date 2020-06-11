@@ -8,8 +8,6 @@ import (
 	"unicode"
 
 	"github.com/huichen/sego"
-
-	"github.com/amazingchow/engine-vector-space-search-service/internal/stopword"
 )
 
 type wordsWrapper struct {
@@ -33,9 +31,7 @@ func EnTokenize(fn string) (map[string]uint32, error) {
 	go func() {
 		for x := range wordsCh {
 			for _, w := range x.words {
-				if _, ok := stopword.EnStopWords[strings.ToLower(w)]; !ok {
-					concordance[strings.ToLower(w)]++
-				}
+				concordance[strings.ToLower(w)]++
 			}
 		}
 		exit <- struct{}{}
@@ -78,9 +74,7 @@ func ChTokenize(fn string) (map[string]uint32, error) {
 	go func() {
 		for x := range wordsCh {
 			for _, w := range x.words {
-				if _, ok := stopword.ChStopWords[w]; !ok {
-					concordance[w]++
-				}
+				concordance[w]++
 			}
 		}
 		exit <- struct{}{}
