@@ -1,6 +1,6 @@
 # engine-vector-indexing-service
 
-![arch](doc/arch.jpg)
+![arch](doc/arch.jpeg)
 
 ## References
 
