@@ -1,4 +1,4 @@
-package splitword
+package tokenize
 
 import (
 	"bufio"
@@ -16,9 +16,9 @@ type wordsWrapper struct {
 	words []string
 }
 
-// SplitEnWords splits input English text into concordance.
+// EnTokenize splits input English text into concordance.
 // A concordance is a counter of every word that occurs in the document.
-func SplitEnWords(fn string) (map[string]uint32, error) {
+func EnTokenize(fn string) (map[string]uint32, error) {
 	concordance := make(map[string]uint32)
 
 	fd, err := os.Open(fn)
@@ -61,9 +61,9 @@ var (
 	_ChRegExp    = regexp.MustCompile("[\u4E00-\u9FA5]+")
 )
 
-// SplitChWords splits input Chinese text into concordance.
+// ChTokenize splits input Chinese text into concordance.
 // A concordance is a counter of every word that occurs in the document.
-func SplitChWords(fn string) (map[string]uint32, error) {
+func ChTokenize(fn string) (map[string]uint32, error) {
 	concordance := make(map[string]uint32)
 
 	fd, err := os.Open(fn)
