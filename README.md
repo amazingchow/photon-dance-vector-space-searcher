@@ -1,5 +1,7 @@
 # engine-vector-indexing-service
 
+![arch](doc/arch.jpg)
+
 ## References
 
 * [Building a Vector Space Indexing Engine in Python by Ben E. C. Boyter's Blog](https://boyter.org/2010/08/build-vector-space-search-engine-python/)
