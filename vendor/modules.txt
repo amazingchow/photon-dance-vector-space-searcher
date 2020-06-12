@@ -6,10 +6,23 @@ github.com/adamzy/cedar-go
 github.com/agonopol/go-stem
 # github.com/andybalholm/cascadia v1.1.0
 github.com/andybalholm/cascadia
+# github.com/cenkalti/backoff v2.2.1+incompatible
+github.com/cenkalti/backoff
 # github.com/davecgh/go-spew v1.1.0
 github.com/davecgh/go-spew/spew
+# github.com/go-ini/ini v1.57.0
+github.com/go-ini/ini
 # github.com/huichen/sego v0.0.0-20180617034105-3f3c8a8cfacc
 github.com/huichen/sego
+# github.com/minio/minio-go v6.0.14+incompatible
+github.com/minio/minio-go
+github.com/minio/minio-go/pkg/credentials
+github.com/minio/minio-go/pkg/encrypt
+github.com/minio/minio-go/pkg/s3signer
+github.com/minio/minio-go/pkg/s3utils
+github.com/minio/minio-go/pkg/set
+# github.com/mitchellh/go-homedir v1.1.0
+github.com/mitchellh/go-homedir
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/rs/zerolog v1.19.0
@@ -19,8 +32,21 @@ github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
 # github.com/stretchr/testify v1.6.0
 github.com/stretchr/testify/assert
+# golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+golang.org/x/crypto/argon2
+golang.org/x/crypto/blake2b
 # golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 golang.org/x/net/html
+golang.org/x/net/http/httpguts
+golang.org/x/net/publicsuffix
 golang.org/x/net/html/atom
+golang.org/x/net/idna
+# golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a
+golang.org/x/sys/cpu
+# golang.org/x/text v0.3.0
+golang.org/x/text/secure/bidirule
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+golang.org/x/text/transform
 # gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 gopkg.in/yaml.v3

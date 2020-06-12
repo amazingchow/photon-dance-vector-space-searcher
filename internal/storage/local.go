@@ -27,7 +27,7 @@ func (p *LocalStorage) Init() error {
 	return os.MkdirAll(p.root, 0755)
 }
 
-// Destroy 清除本地持久化服务的资源
+// Destroy 清除本地持久化服务的资源.
 func (p *LocalStorage) Destroy() error {
 	// Not Implemented
 	return nil
