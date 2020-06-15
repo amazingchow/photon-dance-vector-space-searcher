@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
+
+	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 )
 
 // LocalStorage 提供本地持久化服务.
@@ -34,18 +36,18 @@ func (p *LocalStorage) Destroy() error {
 }
 
 // LocalPath 本地文件持久化路径.
-func (p *LocalStorage) LocalPath(file *File) string {
+func (p *LocalStorage) LocalPath(file *common.File) string {
 	return filepath.Join(p.root, fmt.Sprintf("%s/%s.%s",
-		FileType2FileTypeName[file.Type], file.Name, FileType2FileSuffix[file.Type]))
+		common.FileType2FileTypeName[file.Type], file.Name, common.FileType2FileSuffix[file.Type]))
 }
 
 // Writable 检查当前文件是否可写, 可以就返回待写入的持久化路径.
-func (p *LocalStorage) Writable(file *File) (string, error) {
+func (p *LocalStorage) Writable(file *common.File) (string, error) {
 	return p.LocalPath(file), nil
 }
 
 // Put 将当前文件写入本地磁盘.
-func (p *LocalStorage) Put(file *File) (string, error) {
+func (p *LocalStorage) Put(file *common.File) (string, error) {
 	path := p.LocalPath(file)
 
 	fw, err := os.Create(path)
@@ -78,7 +80,7 @@ func (p *LocalStorage) Put(file *File) (string, error) {
 }
 
 // Readable 检查当前文件是否可读, 可以就返回待读取的持久化路径.
-func (p *LocalStorage) Readable(file *File) (string, error) {
+func (p *LocalStorage) Readable(file *common.File) (string, error) {
 	path := p.LocalPath(file)
 
 	if _, err := os.Stat(path); err != nil {
@@ -90,7 +92,7 @@ func (p *LocalStorage) Readable(file *File) (string, error) {
 }
 
 // Get 从本地磁盘上读取当前文件.
-func (p *LocalStorage) Get(file *File) (string, error) {
+func (p *LocalStorage) Get(file *common.File) (string, error) {
 	path := p.LocalPath(file)
 
 	fr, err := os.Open(path)
@@ -117,13 +119,13 @@ func (p *LocalStorage) Get(file *File) (string, error) {
 }
 
 // Abort 放弃当前文件的持久化工作.
-func (p *LocalStorage) Abort(file *File) error {
+func (p *LocalStorage) Abort(file *common.File) error {
 	// Not Implemented
 	return nil
 }
 
 // Delete 从本地磁盘上删除当前文件.
-func (p *LocalStorage) Delete(file *File) error {
+func (p *LocalStorage) Delete(file *common.File) error {
 	path := p.LocalPath(file)
 
 	if err := os.Remove(path); err != nil {

@@ -1,55 +1,80 @@
 package tokenize
 
 import (
-	"bufio"
-	"os"
+	"log"
 	"regexp"
 	"strings"
 	"unicode"
 
 	"github.com/huichen/sego"
+
+	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
 )
+
+// PipeTokenizeProcessor 分词器
+type PipeTokenizeProcessor struct {
+	Storage storage.Persister
+}
 
 type wordsWrapper struct {
 	words []string
 }
 
-// EnTokenize splits input English text into concordance.
-// A concordance is a counter of every word that occurs in the document.
-func EnTokenize(fn string) (map[string]uint32, error) {
-	concordance := make(map[string]uint32)
+// EnTokenize 对英文文本进行分词, 输出一个concordance.
+func (p *PipeTokenizeProcessor) EnTokenize(input common.Pipeline) (map[string]uint32, error) {
+LOOP_LABEL:
+	for {
+		select {
+		case packet, ok := <-input:
+			{
+				if !ok {
+					break LOOP_LABEL
+				}
 
-	fd, err := os.Open(fn)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
+				file := &common.File{
+					Type: packet.FileType,
+					Name: packet.FileTitle,
+					Body: make([]string, 0),
+				}
+				_, err := p.Storage.Readable(file)
+				if err != nil {
+					log.Fatal(err)
+				}
+				_, err = p.Storage.Get(file)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-	exit := make(chan struct{})
+				concordance := make(map[string]uint32)
 
-	wordsCh := make(chan wordsWrapper, 10)
-	go func() {
-		for x := range wordsCh {
-			for _, w := range x.words {
-				concordance[strings.ToLower(w)]++
+				exit := make(chan struct{})
+
+				wordsCh := make(chan wordsWrapper, 10)
+				go func() {
+					for x := range wordsCh {
+						for _, w := range x.words {
+							concordance[strings.ToLower(w)]++
+						}
+					}
+					exit <- struct{}{}
+				}()
+
+				fc := func(r rune) bool { return !unicode.IsLetter(r) }
+				for _, line := range file.Body {
+					words := strings.FieldsFunc(line, fc)
+					wordsCh <- wordsWrapper{words: words}
+				}
+				close(wordsCh)
+
+				<-exit
+
+				return concordance, nil
 			}
 		}
-		exit <- struct{}{}
-	}()
-
-	scanner := bufio.NewScanner(fd)
-	fc := func(r rune) bool { return !unicode.IsLetter(r) }
-	for scanner.Scan() {
-		words := strings.FieldsFunc(scanner.Text(), fc)
-		wordsCh <- wordsWrapper{words: words}
 	}
-	close(wordsCh)
 
-	err = scanner.Err()
-
-	<-exit
-
-	return concordance, err
+	return nil, nil
 }
 
 var (
@@ -57,42 +82,60 @@ var (
 	_ChRegExp    = regexp.MustCompile("[\u4E00-\u9FA5]+")
 )
 
-// ChTokenize splits input Chinese text into concordance.
-// A concordance is a counter of every word that occurs in the document.
-func ChTokenize(fn string) (map[string]uint32, error) {
-	concordance := make(map[string]uint32)
+// ChTokenize 对中文文本进行分词, 输出一个concordance.
+func (p *PipeTokenizeProcessor) ChTokenize(input common.Pipeline) (map[string]uint32, error) {
+LOOP_LABEL:
+	for {
+		select {
+		case packet, ok := <-input:
+			{
+				if !ok {
+					break LOOP_LABEL
+				}
 
-	fd, err := os.Open(fn)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
+				file := &common.File{
+					Type: packet.FileType,
+					Name: packet.FileTitle,
+					Body: make([]string, 0),
+				}
+				_, err := p.Storage.Readable(file)
+				if err != nil {
+					log.Fatal(err)
+				}
+				_, err = p.Storage.Get(file)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-	exit := make(chan struct{})
+				concordance := make(map[string]uint32)
 
-	wordsCh := make(chan wordsWrapper, 10)
-	go func() {
-		for x := range wordsCh {
-			for _, w := range x.words {
-				concordance[w]++
+				exit := make(chan struct{})
+
+				wordsCh := make(chan wordsWrapper, 10)
+				go func() {
+					for x := range wordsCh {
+						for _, w := range x.words {
+							concordance[w]++
+						}
+					}
+					exit <- struct{}{}
+				}()
+
+				for _, line := range file.Body {
+					segments := _ChSegmenter.Segment([]byte(line))
+					words := _ChRegExp.FindAllString(sego.SegmentsToString(segments, false), -1)
+					wordsCh <- wordsWrapper{words: words}
+				}
+				close(wordsCh)
+
+				<-exit
+
+				return concordance, nil
 			}
 		}
-		exit <- struct{}{}
-	}()
-
-	scanner := bufio.NewScanner(fd)
-	for scanner.Scan() {
-		segments := _ChSegmenter.Segment([]byte(scanner.Text()))
-		words := _ChRegExp.FindAllString(sego.SegmentsToString(segments, false), -1)
-		wordsCh <- wordsWrapper{words: words}
 	}
-	close(wordsCh)
 
-	err = scanner.Err()
-
-	<-exit
-
-	return concordance, err
+	return nil, nil
 }
 
 func init() {

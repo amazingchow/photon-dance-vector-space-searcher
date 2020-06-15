@@ -3,29 +3,35 @@ package parse
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
 )
 
-var _TokenBucket chan struct{}
+// PipeParseProcessor 文本解析器
+type PipeParseProcessor struct {
+	TokenBucket chan struct{}
+	Storage     storage.Persister
+}
 
 // ExtractInfo parses input raw text.
-func ExtractInfo(input common.Pipeline, output common.Pipeline) {
+func (p *PipeParseProcessor) ExtractInfo(input common.Pipeline, output common.Pipeline) {
 LOOP_LABEL:
 	for {
 		select {
-		case p, ok := <-input:
+		case packet, ok := <-input:
 			{
 				if !ok {
 					close(output)
 					break LOOP_LABEL
 				}
-				switch p.WebStation {
+				switch packet.WebStation {
 				case common.MOFRPC:
 					{
-						go parseMOFRPCHTMLText(p, output)
+						go p.parseMOFRPCHTMLText(packet, output)
 					}
 				default:
 					{
@@ -33,40 +39,51 @@ LOOP_LABEL:
 					}
 				}
 			}
-		default:
-			{
-
-			}
 		}
 	}
 }
 
 // 用于解析中华人民共和国财政部发布的文章网页
-func parseMOFRPCHTMLText(p *common.Packet, output common.Pipeline) {
-	_TokenBucket <- struct{}{}
+func (p *PipeParseProcessor) parseMOFRPCHTMLText(packet *common.Packet, output common.Pipeline) {
+	p.TokenBucket <- struct{}{}
 
-	var fr *os.File
-	if p.Local {
-		fr, err := os.Open(p.Location)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer fr.Close()
+	path, err := p.Storage.Readable(&common.File{
+		Type: packet.FileType,
+		Name: packet.FileTitle,
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	fr, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fr.Close()
 
 	doc, err := goquery.NewDocumentFromReader(fr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Find the review items
+	body := make([]string, 0)
 	doc.Find("div.my_conboxzw div.TRS_Editor div.TRS_Editor p").Each(func(i int, s *goquery.Selection) {
-		// line := strings.TrimSpace(s.Text())
+		body = append(body, strings.TrimSpace(s.Text()))
 	})
 
-	<-_TokenBucket
-}
+	_, err = p.Storage.Writable(&common.File{
+		Type: common.TextFile,
+		Name: packet.FileTitle,
+		Body: body,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func init() {
-	_TokenBucket = make(chan struct{}, 20)
+	output <- &common.Packet{
+		FileType:  common.TextFile,
+		FileTitle: packet.FileTitle,
+	}
+
+	<-p.TokenBucket
 }

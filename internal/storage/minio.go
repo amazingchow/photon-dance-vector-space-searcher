@@ -13,6 +13,7 @@ import (
 	"github.com/minio/minio-go"
 	"github.com/rs/zerolog/log"
 
+	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
 )
 
@@ -73,19 +74,19 @@ func (p *S3Storage) Destroy() error {
 }
 
 // RemotePath 服务端文件持久化路径.
-func (p *S3Storage) RemotePath(file *File) string {
+func (p *S3Storage) RemotePath(file *common.File) string {
 	return filepath.Join(p.root, fmt.Sprintf("%s/%s.%s",
-		FileType2FileTypeName[file.Type], file.Name, FileType2FileSuffix[file.Type]))
+		common.FileType2FileTypeName[file.Type], file.Name, common.FileType2FileSuffix[file.Type]))
 }
 
 // LocalPath 本地文件暂存路径.
-func (p *S3Storage) LocalPath(file *File) string {
+func (p *S3Storage) LocalPath(file *common.File) string {
 	return filepath.Join(p.tmp, fmt.Sprintf("%s.%s",
-		file.Name, FileType2FileSuffix[file.Type]))
+		file.Name, common.FileType2FileSuffix[file.Type]))
 }
 
 // Writable 检查当前文件是否可写, 可以就写入本地暂存磁盘, 并返回写入的本地暂存路径.
-func (p *S3Storage) Writable(file *File) (string, error) {
+func (p *S3Storage) Writable(file *common.File) (string, error) {
 	lPath := p.LocalPath(file)
 
 	fw, err := os.Create(lPath)
@@ -116,7 +117,7 @@ func (p *S3Storage) Writable(file *File) (string, error) {
 }
 
 // Put 将本地暂存磁盘上的文件写入s3集群.
-func (p *S3Storage) Put(file *File) (string, error) {
+func (p *S3Storage) Put(file *common.File) (string, error) {
 	rPath := p.RemotePath(file)
 	lPath := p.LocalPath(file)
 
@@ -148,7 +149,7 @@ func (p *S3Storage) Put(file *File) (string, error) {
 }
 
 // Readable 检查当前文件是否可读, 可以就将s3集群上的文件写入本地暂存磁盘, 并返回s3上的存储路径.
-func (p *S3Storage) Readable(file *File) (string, error) {
+func (p *S3Storage) Readable(file *common.File) (string, error) {
 	rPath := p.RemotePath(file)
 	lPath := p.LocalPath(file)
 
@@ -194,7 +195,7 @@ func (p *S3Storage) Readable(file *File) (string, error) {
 }
 
 // Get 从本地暂存磁盘上读取当前文件.
-func (p *S3Storage) Get(file *File) (string, error) {
+func (p *S3Storage) Get(file *common.File) (string, error) {
 	lPath := p.LocalPath(file)
 
 	fr, err := os.Open(lPath)
@@ -219,7 +220,7 @@ func (p *S3Storage) Get(file *File) (string, error) {
 }
 
 // Abort 从本地暂存磁盘上删除当前文件.
-func (p *S3Storage) Abort(file *File) error {
+func (p *S3Storage) Abort(file *common.File) error {
 	lPath := p.LocalPath(file)
 
 	if err := os.Remove(lPath); err != nil {
@@ -231,7 +232,7 @@ func (p *S3Storage) Abort(file *File) error {
 }
 
 // Delete 从s3集群上删除当前文件.
-func (p *S3Storage) Delete(file *File) error {
+func (p *S3Storage) Delete(file *common.File) error {
 	rPath := p.RemotePath(file)
 
 	retry := 0

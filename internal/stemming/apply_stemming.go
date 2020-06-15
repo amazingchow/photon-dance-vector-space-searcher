@@ -8,8 +8,11 @@ import (
 	https://tartarus.org/martin/PorterStemmer/index.html
 */
 
-// EnApplyStemming applies stemming for English terms inside the concordance.
-func EnApplyStemming(concordance map[string]uint32) {
+// PipeStemmingProcessor 词干抽取器
+type PipeStemmingProcessor struct{}
+
+// EnApplyStemming 抽取英文词汇的词干, 并重构concordance.
+func (p *PipeStemmingProcessor) EnApplyStemming(concordance map[string]uint32) {
 	for k, v := range concordance {
 		out := string(stemmer.Stem([]byte(k)))
 		if vv, ok := concordance[out]; ok {
@@ -26,7 +29,7 @@ func EnApplyStemming(concordance map[string]uint32) {
 	}
 }
 
-// ChApplyStemming applies stemming for Chinese terms inside the concordance.
-func ChApplyStemming(concordance map[string]uint32) {
+// ChApplyStemming 抽取中文词汇的词干, 并重构concordance.
+func (p *PipeStemmingProcessor) ChApplyStemming(concordance map[string]uint32) {
 	// TODO
 }

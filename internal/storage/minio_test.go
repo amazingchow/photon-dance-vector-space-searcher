@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 )
 
 var (
@@ -29,8 +31,8 @@ func TestS3StorageReadWriteOp(t *testing.T) {
 	err = p.Init()
 	assert.Empty(t, err)
 
-	fileUpload := &File{
-		Type: TextFile,
+	fileUpload := &common.File{
+		Type: common.TextFile,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作",
 		Body: []string{
 			"财金〔2018〕93号",
@@ -60,8 +62,8 @@ func TestS3StorageReadWriteOp(t *testing.T) {
 	err = p.Abort(fileUpload)
 	assert.Empty(t, err)
 
-	fileDownload := &File{
-		Type: TextFile,
+	fileDownload := &common.File{
+		Type: common.TextFile,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作",
 	}
 

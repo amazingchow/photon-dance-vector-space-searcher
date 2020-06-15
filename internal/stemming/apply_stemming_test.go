@@ -44,7 +44,8 @@ func TestEnApplyStemming(t *testing.T) {
 		"abbot":     2,
 		"abbrevi":   1,
 	}
-	EnApplyStemming(inConcordance)
+	p := &PipeStemmingProcessor{}
+	p.EnApplyStemming(inConcordance)
 	for k, v := range ouConcordance {
 		vv, ok := inConcordance[k]
 		assert.Equal(t, ok, true)
