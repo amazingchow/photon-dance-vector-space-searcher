@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -29,4 +32,28 @@ func BackoffPolicy() backoff.BackOff {
 	repeater := backoff.WithMaxRetries(policy, 5)
 	repeater.Reset()
 	return repeater
+}
+
+func loadConfig(cfgPath string, ptr interface{}) error {
+	if ptr == nil {
+		return fmt.Errorf("ptr of type (%T) is nil", ptr)
+	}
+
+	data, err := ioutil.ReadFile(cfgPath)
+	if err != nil {
+		return fmt.Errorf("open file (%s) with err (%v)", cfgPath, err)
+	}
+
+	if err := json.Unmarshal(data, ptr); err != nil {
+		return fmt.Errorf("json unmarshal file (%s) with err (%v)", cfgPath, err)
+	}
+
+	return nil
+}
+
+// LoadConfigOrPanic 加载配置, 如果加载失败就直接panic.
+func LoadConfigOrPanic(cfgPath string, ptr interface{}) {
+	if err := loadConfig(cfgPath, ptr); err != nil {
+		log.Fatal().Err(err)
+	}
 }

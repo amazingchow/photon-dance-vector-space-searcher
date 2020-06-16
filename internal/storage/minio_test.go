@@ -11,10 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
 )
 
 var (
-	fakeS3Config = &S3Config{
+	fakeS3Config = &conf.MinioConfig{
 		Endpoint:  "127.0.0.1:9000",
 		AccessKey: "minioadmin",
 		SecretKey: "admin12345",

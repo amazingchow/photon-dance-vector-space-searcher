@@ -11,13 +11,21 @@ import (
 	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
 )
 
-// PipeParseProcessor 文本解析器
+// PipeParseProcessor 文本解析器.
 type PipeParseProcessor struct {
 	TokenBucket chan struct{}
 	Storage     storage.Persister
 }
 
-// ExtractInfo parses input raw text.
+// NewPipeParseProcessor 新建文本解析器.
+func NewPipeParseProcessor(storage storage.Persister) *PipeParseProcessor {
+	return &PipeParseProcessor{
+		TokenBucket: make(chan struct{}, 20),
+		Storage:     storage,
+	}
+}
+
+// ExtractInfo 解析文本文件.
 func (p *PipeParseProcessor) ExtractInfo(input common.Pipeline, output common.Pipeline) {
 LOOP_LABEL:
 	for {

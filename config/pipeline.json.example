@@ -1,0 +1,20 @@
+{
+    "kafka": {
+        "brokers": [
+            "127.0.0.1:12181"
+        ],
+        "topic": [
+            "engine-vector-space-search-service"
+        ],
+        "version": "0.10.2.0",
+        "consume_group": "evsss-group"
+    },
+    "minio": {
+        "endpoint": "127.0.0.1:19000",
+        "access_key": "minioadmin",
+        "secret_key": "admin12345",
+        "use_ssl": false,
+        "bucket": "engine-vector-space-search-service",
+        "root": ""
+    }
+}

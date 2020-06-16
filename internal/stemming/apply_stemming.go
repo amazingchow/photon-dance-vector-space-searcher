@@ -11,6 +11,11 @@ import (
 // PipeStemmingProcessor 词干抽取器
 type PipeStemmingProcessor struct{}
 
+// NewPipeStemmingProcessor 新建词干抽取器.
+func NewPipeStemmingProcessor() *PipeStemmingProcessor {
+	return &PipeStemmingProcessor{}
+}
+
 // EnApplyStemming 抽取英文词汇的词干, 并重构concordance.
 func (p *PipeStemmingProcessor) EnApplyStemming(concordance map[string]uint32) {
 	for k, v := range concordance {

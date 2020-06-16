@@ -17,6 +17,13 @@ type PipeTokenizeProcessor struct {
 	Storage storage.Persister
 }
 
+// NewPipeTokenizeProcessor 新建分词器.
+func NewPipeTokenizeProcessor(storage storage.Persister) *PipeTokenizeProcessor {
+	return &PipeTokenizeProcessor{
+		Storage: storage,
+	}
+}
+
 type wordsWrapper struct {
 	words []string
 }

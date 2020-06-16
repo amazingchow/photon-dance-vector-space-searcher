@@ -14,31 +14,21 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
 )
 
 // S3Storage 提供s3持久化服务.
 type S3Storage struct {
-	conf *S3Config
-	cli  *minio.Client
-	root string
-	tmp  string
-}
-
-// S3Config 定义s3服务配置.
-type S3Config struct {
-	Endpoint  string `json:"endpoint"`
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
-	UseSSL    bool   `json:"use_ssl"`
-	Bucket    string `json:"bucket"`
-	Root      string `json:"root"`
+	cfg *conf.MinioConfig
+	cli *minio.Client
+	tmp string
 }
 
 // NewS3Storage 返回s3持久化服务实例.
 // For Unix system, path should meet unix naming rules, like "/path/to/a/b/c".
-func NewS3Storage(conf *S3Config) (*S3Storage, error) {
-	cli, err := minio.New(conf.Endpoint, conf.AccessKey, conf.SecretKey, conf.UseSSL)
+func NewS3Storage(cfg *conf.MinioConfig) (*S3Storage, error) {
+	cli, err := minio.New(cfg.Endpoint, cfg.AccessKey, cfg.SecretKey, cfg.UseSSL)
 	if err != nil {
 		log.Error().Err(err).Msg("cannot create s3 client")
 		return nil, err
@@ -51,19 +41,18 @@ func NewS3Storage(conf *S3Config) (*S3Storage, error) {
 	}
 
 	return &S3Storage{
-		conf: conf,
-		cli:  cli,
-		root: conf.Root,
-		tmp:  tmpDir,
+		cfg: cfg,
+		cli: cli,
+		tmp: tmpDir,
 	}, nil
 }
 
 // Init 初始化用于s3持久化服务的资源.
 func (p *S3Storage) Init() error {
-	ok, err := p.cli.BucketExists(p.conf.Bucket)
+	ok, err := p.cli.BucketExists(p.cfg.Bucket)
 	if err != nil || !ok {
-		log.Error().Err(err).Msgf("bucket <%s> not exist", p.conf.Bucket)
-		return fmt.Errorf("bucket <%s> not exist", p.conf.Bucket)
+		log.Error().Err(err).Msgf("bucket <%s> not exist", p.cfg.Bucket)
+		return fmt.Errorf("bucket <%s> not exist", p.cfg.Bucket)
 	}
 	return nil
 }
@@ -75,7 +64,7 @@ func (p *S3Storage) Destroy() error {
 
 // RemotePath 服务端文件持久化路径.
 func (p *S3Storage) RemotePath(file *common.File) string {
-	return filepath.Join(p.root, fmt.Sprintf("%s/%s.%s",
+	return filepath.Join(p.cfg.Root, fmt.Sprintf("%s/%s.%s",
 		common.FileType2FileTypeName[file.Type], file.Name, common.FileType2FileSuffix[file.Type]))
 }
 
@@ -123,7 +112,7 @@ func (p *S3Storage) Put(file *common.File) (string, error) {
 
 	retry := 0
 	operation := func() error {
-		n, err := p.cli.FPutObject(p.conf.Bucket, rPath, lPath, minio.PutObjectOptions{})
+		n, err := p.cli.FPutObject(p.cfg.Bucket, rPath, lPath, minio.PutObjectOptions{})
 		if err != nil {
 			log.Warn().Err(err).Msgf("cannot write local tmp file to s3, retry=%d, object=%s, file=%s, file size=%d, uploaded=%d",
 				retry, rPath, lPath, utils.FileSize(lPath), n)
@@ -158,7 +147,7 @@ func (p *S3Storage) Readable(file *common.File) (string, error) {
 	retry := 0
 	operation := func() error {
 		var err error
-		obj, err = p.cli.GetObject(p.conf.Bucket, rPath, minio.GetObjectOptions{})
+		obj, err = p.cli.GetObject(p.cfg.Bucket, rPath, minio.GetObjectOptions{})
 		if err != nil {
 			log.Warn().Err(err).Msgf("cannot read remote file from s3, retry=%d, object=%s", retry, rPath)
 			retry++
@@ -237,7 +226,7 @@ func (p *S3Storage) Delete(file *common.File) error {
 
 	retry := 0
 	operation := func() error {
-		if err := p.cli.RemoveObject(p.conf.Bucket, rPath); err != nil {
+		if err := p.cli.RemoveObject(p.cfg.Bucket, rPath); err != nil {
 			log.Warn().Err(err).Msgf("cannot delete remote file from s3, retry=%d, object=%s", retry, rPath)
 			retry++
 			return err
