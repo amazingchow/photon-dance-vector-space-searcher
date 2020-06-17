@@ -83,7 +83,9 @@ func NewCustomConsumerGroupHandler(cfg *conf.KafkaConfig) (*CustomConsumerGroupH
 	var err error
 	sc := sarama.NewConfig()
 	sc.Version, err = sarama.ParseKafkaVersion(h.cfg.Version)
-	sc.Consumer.Offsets.Initial = sarama.OffsetOldest
+	if cfg.FromOldest {
+		sc.Consumer.Offsets.Initial = sarama.OffsetOldest
+	}
 	if err != nil {
 		log.Error().Err(err).Msgf("unsupported kafka version %s", h.cfg.Version)
 		return nil, err

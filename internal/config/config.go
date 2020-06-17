@@ -12,6 +12,7 @@ type KafkaConfig struct {
 	Topic        []string `json:"topic"`
 	Version      string   `json:"version"`
 	ConsumeGroup string   `json:"consume_group"`
+	FromOldest   bool     `json:"from_oldest"`
 }
 
 // MinioConfig minio连接配置
