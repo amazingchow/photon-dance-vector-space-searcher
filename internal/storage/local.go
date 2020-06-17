@@ -26,12 +26,13 @@ func NewLocalStorage(path string) *LocalStorage {
 
 // Init 初始化用于本地持久化服务的资源.
 func (p *LocalStorage) Init() error {
+	log.Info().Msg("load local-storage plugin")
 	return os.MkdirAll(p.root, 0755)
 }
 
 // Destroy 清除本地持久化服务的资源.
 func (p *LocalStorage) Destroy() error {
-	// Not Implemented
+	log.Info().Msg("unload local-storage plugin")
 	return nil
 }
 
@@ -120,7 +121,6 @@ func (p *LocalStorage) Get(file *common.File) (string, error) {
 
 // Abort 放弃当前文件的持久化工作.
 func (p *LocalStorage) Abort(file *common.File) error {
-	// Not Implemented
 	return nil
 }
 

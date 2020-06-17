@@ -1,12 +1,14 @@
 package parse
 
 import (
-	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/rs/zerolog/log"
 
+	pb "github.com/amazingchow/engine-vector-space-search-service/api"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
 )
@@ -19,14 +21,15 @@ type PipeParseProcessor struct {
 
 // NewPipeParseProcessor 新建文本解析器.
 func NewPipeParseProcessor(storage storage.Persister) *PipeParseProcessor {
+	log.Info().Msg("load PipeParseProcessor plugin")
 	return &PipeParseProcessor{
 		TokenBucket: make(chan struct{}, 20),
 		Storage:     storage,
 	}
 }
 
-// ExtractInfo 解析文本文件.
-func (p *PipeParseProcessor) ExtractInfo(input common.Pipeline, output common.Pipeline) {
+// InfoExtract 解析中/英文本文件.
+func (p *PipeParseProcessor) InfoExtract(pGroup *sync.WaitGroup, input common.PacketChannel, output common.PacketChannel) {
 LOOP_LABEL:
 	for {
 		select {
@@ -37,9 +40,9 @@ LOOP_LABEL:
 					break LOOP_LABEL
 				}
 				switch packet.WebStation {
-				case common.MOFRPC:
+				case pb.WebStation_MOFRPC:
 					{
-						go p.parseMOFRPCHTMLText(packet, output)
+						go p.parseMOFRPCHTML(packet, output)
 					}
 				default:
 					{
@@ -49,10 +52,12 @@ LOOP_LABEL:
 			}
 		}
 	}
+	pGroup.Done()
+	log.Info().Msg("unload PipeParseProcessor plugin")
 }
 
 // 用于解析中华人民共和国财政部发布的文章网页
-func (p *PipeParseProcessor) parseMOFRPCHTMLText(packet *common.Packet, output common.Pipeline) {
+func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.PacketChannel) {
 	p.TokenBucket <- struct{}{}
 
 	path, err := p.Storage.Readable(&common.File{
@@ -60,18 +65,21 @@ func (p *PipeParseProcessor) parseMOFRPCHTMLText(packet *common.Packet, output c
 		Name: packet.FileTitle,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Error().Err(err)
+		return
 	}
 
 	fr, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		log.Error().Err(err)
+		return
 	}
 	defer fr.Close()
 
 	doc, err := goquery.NewDocumentFromReader(fr)
 	if err != nil {
-		log.Fatal(err)
+		log.Error().Err(err)
+		return
 	}
 
 	body := make([]string, 0)
@@ -79,19 +87,27 @@ func (p *PipeParseProcessor) parseMOFRPCHTMLText(packet *common.Packet, output c
 		body = append(body, strings.TrimSpace(s.Text()))
 	})
 
-	_, err = p.Storage.Writable(&common.File{
-		Type: common.TextFile,
+	if _, err = p.Storage.Writable(&common.File{
+		Type: pb.FileType_TextFile,
 		Name: packet.FileTitle,
 		Body: body,
-	})
-	if err != nil {
-		log.Fatal(err)
+	}); err != nil {
+		log.Error().Err(err)
+		return
+	}
+	if _, err = p.Storage.Put(&common.File{
+		Type: pb.FileType_TextFile,
+		Name: packet.FileTitle,
+	}); err != nil {
+		log.Error().Err(err)
+		return
 	}
 
-	output <- &common.Packet{
-		FileType:  common.TextFile,
+	output <- &pb.Packet{
+		FileType:  pb.FileType_TextFile,
 		FileTitle: packet.FileTitle,
 	}
+	log.Debug().Msg("PipeParseProcessor processes one data packet")
 
 	<-p.TokenBucket
 }

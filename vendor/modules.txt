@@ -1,6 +1,8 @@
+# github.com/DataDog/zstd v1.3.6-0.20190409195224-796139022798
+github.com/DataDog/zstd
 # github.com/PuerkitoBio/goquery v1.5.1
 github.com/PuerkitoBio/goquery
-# github.com/Shopify/sarama v1.26.4
+# github.com/Shopify/sarama v1.23.1
 github.com/Shopify/sarama
 # github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d
 github.com/adamzy/cedar-go
@@ -12,7 +14,7 @@ github.com/andybalholm/cascadia
 github.com/cenkalti/backoff
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/eapache/go-resiliency v1.2.0
+# github.com/eapache/go-resiliency v1.1.0
 github.com/eapache/go-resiliency/breaker
 # github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21
 github.com/eapache/go-xerial-snappy
@@ -20,21 +22,17 @@ github.com/eapache/go-xerial-snappy
 github.com/eapache/queue
 # github.com/go-ini/ini v1.57.0
 github.com/go-ini/ini
+# github.com/golang/protobuf v1.4.2
+github.com/golang/protobuf/proto
 # github.com/golang/snappy v0.0.1
 github.com/golang/snappy
-# github.com/hashicorp/go-uuid v1.0.2
+# github.com/hashicorp/go-uuid v1.0.1
 github.com/hashicorp/go-uuid
 # github.com/huichen/sego v0.0.0-20180617034105-3f3c8a8cfacc
 github.com/huichen/sego
-# github.com/jcmturner/gofork v1.0.0
+# github.com/jcmturner/gofork v0.0.0-20190328161633-dc7c13fece03
 github.com/jcmturner/gofork/encoding/asn1
 github.com/jcmturner/gofork/x/crypto/pbkdf2
-# github.com/klauspost/compress v1.9.8
-github.com/klauspost/compress/zstd
-github.com/klauspost/compress/huff0
-github.com/klauspost/compress/snappy
-github.com/klauspost/compress/zstd/internal/xxhash
-github.com/klauspost/compress/fse
 # github.com/minio/minio-go v6.0.14+incompatible
 github.com/minio/minio-go
 github.com/minio/minio-go/pkg/credentials
@@ -44,21 +42,21 @@ github.com/minio/minio-go/pkg/s3utils
 github.com/minio/minio-go/pkg/set
 # github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
-# github.com/pierrec/lz4 v2.4.1+incompatible
+# github.com/pierrec/lz4 v0.0.0-20190327172049-315a67e90e41
 github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563
+# github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
 github.com/rcrowley/go-metrics
 # github.com/rs/zerolog v1.19.0
-github.com/rs/zerolog/log
 github.com/rs/zerolog
+github.com/rs/zerolog/log
 github.com/rs/zerolog/internal/cbor
 github.com/rs/zerolog/internal/json
-# github.com/stretchr/testify v1.6.0
+# github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
-# golang.org/x/crypto v0.0.0-20200204104054-c9f3fb736b72
+# golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
 golang.org/x/crypto/argon2
 golang.org/x/crypto/md4
 golang.org/x/crypto/blake2b
@@ -71,19 +69,47 @@ golang.org/x/net/publicsuffix
 golang.org/x/net/internal/socks
 golang.org/x/net/html/atom
 golang.org/x/net/idna
-# golang.org/x/sys v0.0.0-20190412213103-97732733099d
+# golang.org/x/sys v0.0.0-20190403152447-81d4e9dc473e
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
-# golang.org/x/text v0.3.2
+# golang.org/x/text v0.3.0
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/transform
+# google.golang.org/protobuf v1.24.0
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/fieldsort
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/fieldnum
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/genname
+google.golang.org/protobuf/internal/detrand
 # gopkg.in/jcmturner/aescts.v1 v1.0.1
 gopkg.in/jcmturner/aescts.v1
 # gopkg.in/jcmturner/dnsutils.v1 v1.0.1
 gopkg.in/jcmturner/dnsutils.v1
-# gopkg.in/jcmturner/gokrb5.v7 v7.5.0
+# gopkg.in/jcmturner/gokrb5.v7 v7.2.3
 gopkg.in/jcmturner/gokrb5.v7/asn1tools
 gopkg.in/jcmturner/gokrb5.v7/client
 gopkg.in/jcmturner/gokrb5.v7/config
@@ -117,5 +143,3 @@ gopkg.in/jcmturner/gokrb5.v7/crypto/rfc8009
 # gopkg.in/jcmturner/rpc.v1 v1.1.0
 gopkg.in/jcmturner/rpc.v1/mstypes
 gopkg.in/jcmturner/rpc.v1/ndr
-# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
-gopkg.in/yaml.v3

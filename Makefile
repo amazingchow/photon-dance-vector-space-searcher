@@ -13,6 +13,9 @@ $(TARGETS): $(SRC)
 test:
 	go test -count=1 -v -p 1 $(shell go list ./...)
 
+pb-fmt:
+	@clang-format -i ./pb/*.proto
+
 clean:
 	rm -f $(ALL_TARGETS)
 

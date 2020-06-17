@@ -54,11 +54,13 @@ func (p *S3Storage) Init() error {
 		log.Error().Err(err).Msgf("bucket <%s> not exist", p.cfg.Bucket)
 		return fmt.Errorf("bucket <%s> not exist", p.cfg.Bucket)
 	}
+	log.Info().Msg("load minio plugin")
 	return nil
 }
 
 // Destroy 清除s3持久化服务的资源.
 func (p *S3Storage) Destroy() error {
+	log.Info().Msg("unload minio plugin")
 	return os.RemoveAll(p.tmp)
 }
 
@@ -137,7 +139,7 @@ func (p *S3Storage) Put(file *common.File) (string, error) {
 	return lPath, nil
 }
 
-// Readable 检查当前文件是否可读, 可以就将s3集群上的文件写入本地暂存磁盘, 并返回s3上的存储路径.
+// Readable 检查当前文件是否可读, 可以就将s3集群上的文件写入本地暂存磁盘, 并返回写入的本地暂存路径.
 func (p *S3Storage) Readable(file *common.File) (string, error) {
 	rPath := p.RemotePath(file)
 	lPath := p.LocalPath(file)

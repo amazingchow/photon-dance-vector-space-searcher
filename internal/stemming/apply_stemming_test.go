@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 )
 
 func TestEnApplyStemming(t *testing.T) {
@@ -44,13 +46,30 @@ func TestEnApplyStemming(t *testing.T) {
 		"abbot":     2,
 		"abbrevi":   1,
 	}
-	p := &PipeStemmingProcessor{}
-	p.EnApplyStemming(inConcordance)
-	for k, v := range ouConcordance {
-		vv, ok := inConcordance[k]
-		assert.Equal(t, ok, true)
-		assert.Equal(t, vv, v)
+
+	p := &PipeStemmingProcessor{
+		TokenBucket: make(chan struct{}, 1),
 	}
+	inpacket := &common.ConcordanceWrapper{
+		Concordance: inConcordance,
+	}
+	output := make(common.ConcordanceChannel)
+
+	exit := make(chan struct{})
+
+	go func() {
+		outpacket := <-output
+		for k, v := range ouConcordance {
+			vv, ok := outpacket.Concordance[k]
+			assert.Equal(t, ok, true)
+			assert.Equal(t, vv, v)
+		}
+		exit <- struct{}{}
+	}()
+
+	p.applyEnglishStemming(inpacket, output)
+
+	<-exit
 }
 
 func TestChApplyStemming(t *testing.T) {
