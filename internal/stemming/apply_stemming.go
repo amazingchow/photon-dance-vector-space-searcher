@@ -30,6 +30,7 @@ func NewPipeStemmingProcessor(language common.LanguageType) *PipeStemmingProcess
 
 // ApplyStemming 抽取中/英文词汇的词干, 并重构concordance.
 func (p *PipeStemmingProcessor) ApplyStemming(pGroup *sync.WaitGroup, input common.ConcordanceChannel, output common.ConcordanceChannel) {
+	pGroup.Add(1)
 LOOP_LABEL:
 	for {
 		select {

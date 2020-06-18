@@ -41,6 +41,7 @@ func NewPipeTokenizeProcessor(storage storage.Persister, language common.Languag
 
 // InfoTokenize 对中/英文本进行分词.
 func (p *PipeTokenizeProcessor) InfoTokenize(pGroup *sync.WaitGroup, input common.PacketChannel, output common.ConcordanceChannel) {
+	pGroup.Add(1)
 LOOP_LABEL:
 	for {
 		select {

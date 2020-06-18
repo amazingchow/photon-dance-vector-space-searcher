@@ -30,6 +30,7 @@ func NewPipeParseProcessor(storage storage.Persister) *PipeParseProcessor {
 
 // InfoExtract 解析中/英文本文件.
 func (p *PipeParseProcessor) InfoExtract(pGroup *sync.WaitGroup, input common.PacketChannel, output common.PacketChannel) {
+	pGroup.Add(1)
 LOOP_LABEL:
 	for {
 		select {

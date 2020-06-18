@@ -25,6 +25,7 @@ func NewPipeStopWordsProcessor(language common.LanguageType) *PipeStopWordsProce
 
 // RemoveStopWords 移除concordance中的中/英文停词+特殊停词.
 func (p *PipeStopWordsProcessor) RemoveStopWords(pGroup *sync.WaitGroup, input common.ConcordanceChannel, output common.ConcordanceChannel) {
+	pGroup.Add(1)
 LOOP_LABEL:
 	for {
 		select {
