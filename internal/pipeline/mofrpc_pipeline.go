@@ -10,6 +10,7 @@ import (
 	pb "github.com/amazingchow/engine-vector-space-search-service/api"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
+	"github.com/amazingchow/engine-vector-space-search-service/internal/indexing"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/kafka"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/parse"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/stemming"
@@ -34,7 +35,8 @@ type MOFRPCContainer struct {
 	stoperInput    common.ConcordanceChannel
 	stemmer        *stemming.PipeStemmingProcessor
 	stemmerInput   common.ConcordanceChannel
-	stemmerOuput   common.ConcordanceChannel
+	indexer        *indexing.PipeIndexProcessor
+	indexerInput   common.ConcordanceChannel
 
 	pGroup *sync.WaitGroup
 	exit   chan struct{}
@@ -67,7 +69,8 @@ func NewMOFRPCContainer(cfg *conf.PipelineConfig) (*MOFRPCContainer, error) {
 	h.stoperInput = make(common.ConcordanceChannel)
 	h.stemmer = stemming.NewPipeStemmingProcessor(common.LanguageTypeChinsese)
 	h.stemmerInput = make(common.ConcordanceChannel)
-	h.stemmerOuput = make(common.ConcordanceChannel)
+	h.indexer = indexing.NewPipeIndexProcessor(h.storage)
+	h.indexerInput = make(common.ConcordanceChannel)
 
 	h.pGroup = new(sync.WaitGroup)
 	h.exit = make(chan struct{})
@@ -81,7 +84,8 @@ func (h *MOFRPCContainer) process() {
 	go h.parser.InfoExtract(h.pGroup, h.parserInput, h.tokenizerInput)
 	go h.tokenizer.InfoTokenize(h.pGroup, h.tokenizerInput, h.stoperInput)
 	go h.stoper.RemoveStopWords(h.pGroup, h.stoperInput, h.stemmerInput)
-	go h.stemmer.ApplyStemming(h.pGroup, h.stemmerInput, h.stemmerOuput)
+	go h.stemmer.ApplyStemming(h.pGroup, h.stemmerInput, h.indexerInput)
+	go h.indexer.TermsIndexing(h.pGroup, h.indexerInput)
 }
 
 // Run 运行MOFRPC数据容器.
@@ -117,6 +121,8 @@ func (h *MOFRPCContainer) Stop() {
 		close(h.parserInput)
 		h.pGroup.Wait()
 		log.Info().Msg("try to close minio client ...")
+		h.indexer.Dump()
+		log.Info().Msg("try to dump terms indexing ...")
 		h.storage.Destroy()
 	})
 	<-h.exit

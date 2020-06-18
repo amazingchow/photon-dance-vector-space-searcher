@@ -79,10 +79,10 @@ func (p *PipeStemmingProcessor) applyEnglishStemming(packet *common.ConcordanceW
 		}
 	}
 
-	// output <- &common.ConcordanceWrapper{
-	// 	DocID:       packet.DocID,
-	// 	Concordance: packet.Concordance,
-	// }
+	output <- &common.ConcordanceWrapper{
+		DocID:       packet.DocID,
+		Concordance: packet.Concordance,
+	}
 	log.Debug().Msg("PipeStemmingProcessor processes one data packet")
 
 	<-p.TokenBucket
@@ -95,10 +95,10 @@ func (p *PipeStemmingProcessor) applyChineseStemming(packet *common.ConcordanceW
 
 	fmt.Printf("%v\n", packet.Concordance)
 
-	// output <- &common.ConcordanceWrapper{
-	// 	DocID:       packet.DocID,
-	// 	Concordance: packet.Concordance,
-	// }
+	output <- &common.ConcordanceWrapper{
+		DocID:       packet.DocID,
+		Concordance: packet.Concordance,
+	}
 	log.Debug().Msg("PipeStemmingProcessor processes one data packet")
 
 	<-p.TokenBucket
