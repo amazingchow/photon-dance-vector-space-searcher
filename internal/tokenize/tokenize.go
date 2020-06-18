@@ -75,8 +75,8 @@ func (p *PipeTokenizeProcessor) tokenizeEnglishDoc(packet *pb.Packet, output com
 	p.TokenBucket <- struct{}{}
 
 	file := &common.File{
-		Type: packet.FileType,
-		Name: packet.FileTitle,
+		Type: packet.DocType,
+		Name: packet.DocTitle,
 		Body: make([]string, 0),
 	}
 	if _, err := p.Storage.Readable(file); err != nil {
@@ -122,8 +122,8 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 	p.TokenBucket <- struct{}{}
 
 	file := &common.File{
-		Type: packet.FileType,
-		Name: packet.FileTitle,
+		Type: packet.DocType,
+		Name: packet.DocTitle,
 		Body: make([]string, 0),
 	}
 	if _, err := p.Storage.Readable(file); err != nil {

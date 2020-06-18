@@ -16,21 +16,21 @@ const (
 
 var (
 	// FileType2FileTypeName 文件类型到文件类型名之间的映射.
-	FileType2FileTypeName = map[pb.FileType]string{
-		pb.FileType_HTMLFile: "html",
-		pb.FileType_TextFile: "text",
+	FileType2FileTypeName = map[pb.DocType]string{
+		pb.DocType_HTMLDoc: "html",
+		pb.DocType_TextDoc: "text",
 	}
 
 	// FileType2FileSuffix 文件类型到文件后缀之间的映射.
-	FileType2FileSuffix = map[pb.FileType]string{
-		pb.FileType_HTMLFile: "html",
-		pb.FileType_TextFile: "txt",
+	FileType2FileSuffix = map[pb.DocType]string{
+		pb.DocType_HTMLDoc: "html",
+		pb.DocType_TextDoc: "txt",
 	}
 )
 
 // File 通用文件定义.
 type File struct {
-	Type pb.FileType
+	Type pb.DocType
 	Name string
 	Body []string
 }

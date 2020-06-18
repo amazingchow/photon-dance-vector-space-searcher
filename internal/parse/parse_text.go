@@ -61,8 +61,8 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 	p.TokenBucket <- struct{}{}
 
 	path, err := p.Storage.Readable(&common.File{
-		Type: packet.FileType,
-		Name: packet.FileTitle,
+		Type: packet.DocType,
+		Name: packet.DocTitle,
 	})
 	if err != nil {
 		log.Error().Err(err)
@@ -88,24 +88,24 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 	})
 
 	if _, err = p.Storage.Writable(&common.File{
-		Type: pb.FileType_TextFile,
-		Name: packet.FileTitle,
+		Type: pb.DocType_TextDoc,
+		Name: packet.DocTitle,
 		Body: body,
 	}); err != nil {
 		log.Error().Err(err)
 		return
 	}
 	if _, err = p.Storage.Put(&common.File{
-		Type: pb.FileType_TextFile,
-		Name: packet.FileTitle,
+		Type: pb.DocType_TextDoc,
+		Name: packet.DocTitle,
 	}); err != nil {
 		log.Error().Err(err)
 		return
 	}
 
 	output <- &pb.Packet{
-		FileType:  pb.FileType_TextFile,
-		FileTitle: packet.FileTitle,
+		DocType:  pb.DocType_TextDoc,
+		DocTitle: packet.DocTitle,
 	}
 	log.Debug().Msg("PipeParseProcessor processes one data packet")
 

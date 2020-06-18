@@ -8,16 +8,17 @@ enum WebStation {
   MOFRPC = 0;
 }
 
-enum FileType {
+enum DocType {
   // HTML格式文件
-  HTMLFile = 0;
+  HTMLDoc = 0;
   // TXT格式文件
-  TextFile = 1;
+  TextDoc = 1;
 }
 
 // 传输数据包.
 message Packet {
   WebStation web_station = 1;
-  FileType file_type = 2;
-  string file_title = 3;
+  DocType doc_type = 2;
+  string doc_id = 3;
+  string doc_title = 4;
 }
