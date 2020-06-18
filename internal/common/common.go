@@ -42,6 +42,7 @@ type WordsWrapper struct {
 
 // ConcordanceWrapper 封装concordance.
 type ConcordanceWrapper struct {
+	DocID       string
 	Concordance map[string]uint32
 }
 

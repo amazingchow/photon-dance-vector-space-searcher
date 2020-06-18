@@ -67,6 +67,7 @@ func (p *PipeStopWordsProcessor) removeEnglishStopWords(packet *common.Concordan
 	}
 
 	output <- &common.ConcordanceWrapper{
+		DocID:       packet.DocID,
 		Concordance: packet.Concordance,
 	}
 	log.Debug().Msg("PipeStopWordsProcessor processes one data packet")
@@ -86,6 +87,7 @@ func (p *PipeStopWordsProcessor) removeChineseStopWords(packet *common.Concordan
 	}
 
 	output <- &common.ConcordanceWrapper{
+		DocID:       packet.DocID,
 		Concordance: packet.Concordance,
 	}
 	log.Debug().Msg("PipeStopWordsProcessor processes one data packet")

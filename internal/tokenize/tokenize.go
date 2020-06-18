@@ -76,7 +76,7 @@ func (p *PipeTokenizeProcessor) tokenizeEnglishDoc(packet *pb.Packet, output com
 
 	file := &common.File{
 		Type: packet.DocType,
-		Name: packet.DocTitle,
+		Name: packet.DocId,
 		Body: make([]string, 0),
 	}
 	if _, err := p.Storage.Readable(file); err != nil {
@@ -111,6 +111,7 @@ func (p *PipeTokenizeProcessor) tokenizeEnglishDoc(packet *pb.Packet, output com
 	<-exit
 
 	output <- &common.ConcordanceWrapper{
+		DocID:       packet.DocId,
 		Concordance: concordance,
 	}
 	log.Debug().Msg("PipeTokenizeProcessor processes one data packet")
@@ -123,7 +124,7 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 
 	file := &common.File{
 		Type: packet.DocType,
-		Name: packet.DocTitle,
+		Name: packet.DocId,
 		Body: make([]string, 0),
 	}
 	if _, err := p.Storage.Readable(file); err != nil {
@@ -158,6 +159,7 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 	<-exit
 
 	output <- &common.ConcordanceWrapper{
+		DocID:       packet.DocId,
 		Concordance: concordance,
 	}
 	log.Debug().Msg("PipeTokenizeProcessor processes one data packet")
