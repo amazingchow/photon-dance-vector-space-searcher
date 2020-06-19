@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sync"
+	"sync/atomic"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
@@ -20,6 +21,7 @@ type PipeIndexProcessor struct {
 	tokenBucket chan struct{}
 	indexer     InvertedIndex
 	storage     storage.Persister
+	available   int32
 }
 
 // InvertedIndex 倒排索引数据结构.
@@ -49,6 +51,7 @@ func NewPipeIndexProcessor(cfg *conf.IndexerConfig, storage storage.Persister) *
 		cfg:         cfg,
 		tokenBucket: make(chan struct{}, 20),
 		storage:     storage,
+		available:   0,
 	}
 	p.indexer = InvertedIndex{
 		Vocabulary: 0,
@@ -153,4 +156,19 @@ func (p *PipeIndexProcessor) Load() {
 		}
 		log.Info().Msgf("load terms indexing from file=%s", p.cfg.DumpPath)
 	}
+}
+
+// MarkServiceAvailable 将服务标记为可用.
+func (p *PipeIndexProcessor) MarkServiceAvailable() {
+	atomic.StoreInt32(&(p.available), 1)
+}
+
+// MarkServiceUnavailable 将服务标记为不可用.
+func (p *PipeIndexProcessor) MarkServiceUnavailable() {
+	atomic.StoreInt32(&(p.available), 0)
+}
+
+// ServiceAvailable 服务是否可用.
+func (p *PipeIndexProcessor) ServiceAvailable() bool {
+	return atomic.LoadInt32(&(p.available)) == 1
 }

@@ -51,18 +51,20 @@ LOOP_LABEL:
 					close(output)
 					break LOOP_LABEL
 				}
-				switch p.language {
-				case common.LanguageTypeEnglish:
-					{
-						go p.tokenizeEnglishDoc(packet, output)
-					}
-				case common.LanguageTypeChinsese:
-					{
-						go p.tokenizeChineseDoc(packet, output)
-					}
-				default:
-					{
+				if packet.DeliveryStatus == pb.PacketDeliveryStatus_InDelivery {
+					switch p.language {
+					case common.LanguageTypeEnglish:
+						{
+							go p.tokenizeEnglishDoc(packet, output)
+						}
+					case common.LanguageTypeChinsese:
+						{
+							go p.tokenizeChineseDoc(packet, output)
+						}
+					default:
+						{
 
+						}
 					}
 				}
 			}

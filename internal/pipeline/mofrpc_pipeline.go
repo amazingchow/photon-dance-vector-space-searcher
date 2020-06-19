@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -104,8 +103,13 @@ LOOP:
 					log.Warn().Err(err).Msg("bad message")
 					continue
 				}
-				h.parserInput <- packet
-				time.Sleep(time.Second)
+				if packet.DeliveryStatus == pb.PacketDeliveryStatus_InDelivery {
+					log.Info().Msg("consume one packet")
+					h.indexer.MarkServiceUnavailable()
+					h.parserInput <- packet
+				} else if packet.DeliveryStatus == pb.PacketDeliveryStatus_OutOfStock {
+					h.indexer.MarkServiceAvailable()
+				}
 			}
 		}
 	}
@@ -116,14 +120,10 @@ LOOP:
 func (h *MOFRPCContainer) Stop() {
 	log.Info().Msg("try to close pipeline container ...")
 	h.once.Do(func() {
-		log.Info().Msg("try to close kafka consumer ...")
 		h.consumer.Close()
-		log.Info().Msg("try to close all nlp processors ...")
 		close(h.parserInput)
 		h.pGroup.Wait()
-		log.Info().Msg("try to close minio client ...")
 		h.indexer.Dump()
-		log.Info().Msg("try to dump terms indexing ...")
 		h.storage.Destroy()
 	})
 	<-h.exit

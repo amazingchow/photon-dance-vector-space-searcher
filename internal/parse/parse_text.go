@@ -40,14 +40,16 @@ LOOP_LABEL:
 					close(output)
 					break LOOP_LABEL
 				}
-				switch packet.WebStation {
-				case pb.WebStation_MOFRPC:
-					{
-						go p.parseMOFRPCHTML(packet, output)
-					}
-				default:
-					{
+				if packet.DeliveryStatus == pb.PacketDeliveryStatus_InDelivery {
+					switch packet.WebStation {
+					case pb.WebStation_MOFRPC:
+						{
+							go p.parseMOFRPCHTML(packet, output)
+						}
+					default:
+						{
 
+						}
 					}
 				}
 			}
