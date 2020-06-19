@@ -1,7 +1,6 @@
 package stemming
 
 import (
-	"fmt"
 	"sync"
 
 	stemmer "github.com/agonopol/go-stem"
@@ -92,8 +91,6 @@ func (p *PipeStemmingProcessor) applyChineseStemming(packet *common.ConcordanceW
 	p.TokenBucket <- struct{}{}
 
 	// 词干提取是英文语料预处理的一个步骤, 中文并不需要
-
-	fmt.Printf("%v\n", packet.Concordance)
 
 	output <- &common.ConcordanceWrapper{
 		DocID:       packet.DocID,

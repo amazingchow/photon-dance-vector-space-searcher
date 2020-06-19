@@ -17,12 +17,17 @@ import (
 
 var (
 	_CfgPath = flag.String("conf", "config/pipeline.json", "pipeline config")
+	_Debug   = flag.Bool("debug", false, "debug log level")
 )
 
 func main() {
 	flag.Parse()
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).With().Caller().Logger()
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	if *_Debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 
 	var pipelieCfg conf.PipelineConfig
 	utils.LoadConfigOrPanic(*_CfgPath, &pipelieCfg)
