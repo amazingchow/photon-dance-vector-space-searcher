@@ -48,7 +48,7 @@ func TestEnApplyStemming(t *testing.T) {
 	}
 
 	p := &PipeStemmingProcessor{
-		TokenBucket: make(chan struct{}, 1),
+		tokenBucket: make(chan struct{}, 1),
 	}
 	inpacket := &common.ConcordanceWrapper{
 		Concordance: inConcordance,

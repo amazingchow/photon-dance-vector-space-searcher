@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	pb "github.com/amazingchow/engine-vector-space-search-service/api"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
 )
@@ -33,7 +34,7 @@ func TestS3StorageReadWriteOp(t *testing.T) {
 	assert.Empty(t, err)
 
 	fileUpload := &common.File{
-		Type: common.TextFile,
+		Type: pb.DocType_TextDoc,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作",
 		Body: []string{
 			"财金〔2018〕93号",
@@ -64,7 +65,7 @@ func TestS3StorageReadWriteOp(t *testing.T) {
 	assert.Empty(t, err)
 
 	fileDownload := &common.File{
-		Type: common.TextFile,
+		Type: pb.DocType_TextDoc,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作",
 	}
 

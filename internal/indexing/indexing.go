@@ -1,6 +1,7 @@
 package indexing
 
 import (
+	"fmt"
 	"io/ioutil"
 	"sync"
 
@@ -8,24 +9,28 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
 )
 
 // PipeIndexProcessor 索引器.
 type PipeIndexProcessor struct {
-	TokenBucket chan struct{}
-	Indexer     InvertedIndex
-	Storage     storage.Persister
+	cfg         *conf.IndexerConfig
+	tokenBucket chan struct{}
+	indexer     InvertedIndex
+	storage     storage.Persister
 }
 
 // InvertedIndex 倒排索引数据结构.
 type InvertedIndex struct {
-	mu   sync.Mutex
-	Dict map[string]*PostingList `json:"dict"`
+	mu         sync.Mutex
+	Vocabulary uint32
+	Dict       map[string]*PostingList `json:"dict"`
 }
 
 // PostingList 信息列表.
 type PostingList struct {
+	TermID       string   `json:"term_id"`
 	DocFrequency uint32   `json:"doc_frequency"`
 	Postings     *Posting `json:"postings"`
 }
@@ -38,13 +43,15 @@ type Posting struct {
 }
 
 // NewPipeIndexProcessor 新建索引器.
-func NewPipeIndexProcessor(storage storage.Persister) *PipeIndexProcessor {
+func NewPipeIndexProcessor(cfg *conf.IndexerConfig, storage storage.Persister) *PipeIndexProcessor {
 	p := &PipeIndexProcessor{
-		TokenBucket: make(chan struct{}, 20),
-		Storage:     storage,
+		cfg:         cfg,
+		tokenBucket: make(chan struct{}, 20),
+		storage:     storage,
 	}
-	p.Indexer = InvertedIndex{
-		Dict: make(map[string]*PostingList),
+	p.indexer = InvertedIndex{
+		Vocabulary: 0,
+		Dict:       make(map[string]*PostingList),
 	}
 	log.Info().Msg("load PipeIndexProcessor plugin")
 	return p
@@ -70,10 +77,10 @@ LOOP_LABEL:
 }
 
 func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
 	for term, freq := range packet.Concordance {
-		list, ok := p.Indexer.Dict[term]
+		list, ok := p.indexer.Dict[term]
 		if ok {
 			cur := list.Postings
 			inserted := false
@@ -97,16 +104,18 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 					Next:          nil,
 				}
 			}
-			p.Indexer.Dict[term].Postings = cur
-			p.Indexer.Dict[term].DocFrequency++
+			p.indexer.Dict[term].Postings = cur
+			p.indexer.Dict[term].DocFrequency++
 		} else {
-			p.Indexer.Dict[term] = &PostingList{
+			p.indexer.Vocabulary++
+			p.indexer.Dict[term] = &PostingList{
+				TermID:       fmt.Sprintf("%010d", p.indexer.Vocabulary),
 				DocFrequency: 1,
 				Postings: &Posting{
 					Next: nil,
 				},
 			}
-			p.Indexer.Dict[term].Postings.Next = &Posting{
+			p.indexer.Dict[term].Postings.Next = &Posting{
 				TermFrequency: freq,
 				DocID:         packet.DocID,
 				Next:          nil,
@@ -114,13 +123,13 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 		}
 	}
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }
 
 // Dump 将索引结构持久化到存储硬件.
 func (p *PipeIndexProcessor) Dump() {
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	serialization, err := json.Marshal(&(p.Indexer))
+	serialization, err := json.Marshal(&(p.indexer))
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot dump terms indexing")
 	}
@@ -136,7 +145,7 @@ func (p *PipeIndexProcessor) Load() {
 		log.Fatal().Err(err).Msg("cannot load terms indexing")
 	}
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	if err = json.Unmarshal(deserialization, &(p.Indexer)); err != nil {
+	if err = json.Unmarshal(deserialization, &(p.indexer)); err != nil {
 		log.Fatal().Err(err).Msg("cannot load terms indexing")
 	}
 }

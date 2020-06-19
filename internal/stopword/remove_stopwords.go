@@ -10,16 +10,16 @@ import (
 
 // PipeStopWordsProcessor 停词器
 type PipeStopWordsProcessor struct {
-	TokenBucket chan struct{}
-	Language    common.LanguageType
+	tokenBucket chan struct{}
+	language    common.LanguageType
 }
 
 // NewPipeStopWordsProcessor 新建停词器.
 func NewPipeStopWordsProcessor(language common.LanguageType) *PipeStopWordsProcessor {
 	log.Info().Msg("load PipeStopWordsProcessor plugin")
 	return &PipeStopWordsProcessor{
-		TokenBucket: make(chan struct{}, 20),
-		Language:    language,
+		tokenBucket: make(chan struct{}, 20),
+		language:    language,
 	}
 }
 
@@ -35,7 +35,7 @@ LOOP_LABEL:
 					close(output)
 					break LOOP_LABEL
 				}
-				switch p.Language {
+				switch p.language {
 				case common.LanguageTypeEnglish:
 					{
 						go p.removeEnglishStopWords(packet, output)
@@ -57,7 +57,7 @@ LOOP_LABEL:
 }
 
 func (p *PipeStopWordsProcessor) removeEnglishStopWords(packet *common.ConcordanceWrapper, output common.ConcordanceChannel) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
 	for k := range packet.Concordance {
 		if _, ok := EnStopWords[k]; ok {
@@ -73,11 +73,11 @@ func (p *PipeStopWordsProcessor) removeEnglishStopWords(packet *common.Concordan
 	}
 	log.Debug().Msg("PipeStopWordsProcessor processes one data packet")
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }
 
 func (p *PipeStopWordsProcessor) removeChineseStopWords(packet *common.ConcordanceWrapper, output common.ConcordanceChannel) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
 	for k := range packet.Concordance {
 		if _, ok := ChStopWords[k]; ok {
@@ -93,5 +93,5 @@ func (p *PipeStopWordsProcessor) removeChineseStopWords(packet *common.Concordan
 	}
 	log.Debug().Msg("PipeStopWordsProcessor processes one data packet")
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }

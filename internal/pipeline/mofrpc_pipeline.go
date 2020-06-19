@@ -69,7 +69,7 @@ func NewMOFRPCContainer(cfg *conf.PipelineConfig) (*MOFRPCContainer, error) {
 	h.stoperInput = make(common.ConcordanceChannel)
 	h.stemmer = stemming.NewPipeStemmingProcessor(common.LanguageTypeChinsese)
 	h.stemmerInput = make(common.ConcordanceChannel)
-	h.indexer = indexing.NewPipeIndexProcessor(h.storage)
+	h.indexer = indexing.NewPipeIndexProcessor(h.cfg.Indexer, h.storage)
 	h.indexerInput = make(common.ConcordanceChannel)
 
 	h.pGroup = new(sync.WaitGroup)

@@ -16,24 +16,24 @@ import (
 
 // PipeTokenizeProcessor 文本分词器
 type PipeTokenizeProcessor struct {
-	TokenBucket chan struct{}
-	Storage     storage.Persister
-	Language    common.LanguageType
-	ChSegmenter *sego.Segmenter
-	ChRegExp    *regexp.Regexp
+	tokenBucket chan struct{}
+	storage     storage.Persister
+	language    common.LanguageType
+	chSegmenter *sego.Segmenter
+	chRegExp    *regexp.Regexp
 }
 
 // NewPipeTokenizeProcessor 新建文本分词器.
 func NewPipeTokenizeProcessor(storage storage.Persister, language common.LanguageType) *PipeTokenizeProcessor {
 	p := &PipeTokenizeProcessor{
-		TokenBucket: make(chan struct{}, 20),
-		Storage:     storage,
-		Language:    language,
+		tokenBucket: make(chan struct{}, 20),
+		storage:     storage,
+		language:    language,
 	}
 	if language == common.LanguageTypeChinsese {
-		p.ChSegmenter = new(sego.Segmenter)
-		p.ChSegmenter.LoadDictionary("dict/dictionary.txt")
-		p.ChRegExp = regexp.MustCompile("[\u4E00-\u9FA5]+")
+		p.chSegmenter = new(sego.Segmenter)
+		p.chSegmenter.LoadDictionary("dict/dictionary.txt")
+		p.chRegExp = regexp.MustCompile("[\u4E00-\u9FA5]+")
 	}
 	log.Info().Msg("load PipeTokenizeProcessor plugin")
 	return p
@@ -51,7 +51,7 @@ LOOP_LABEL:
 					close(output)
 					break LOOP_LABEL
 				}
-				switch p.Language {
+				switch p.language {
 				case common.LanguageTypeEnglish:
 					{
 						go p.tokenizeEnglishDoc(packet, output)
@@ -73,18 +73,18 @@ LOOP_LABEL:
 }
 
 func (p *PipeTokenizeProcessor) tokenizeEnglishDoc(packet *pb.Packet, output common.ConcordanceChannel) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
 	file := &common.File{
 		Type: packet.DocType,
 		Name: packet.DocId,
 		Body: make([]string, 0),
 	}
-	if _, err := p.Storage.Readable(file); err != nil {
+	if _, err := p.storage.Readable(file); err != nil {
 		log.Error().Err(err)
 		return
 	}
-	if _, err := p.Storage.Get(file); err != nil {
+	if _, err := p.storage.Get(file); err != nil {
 		log.Error().Err(err)
 		return
 	}
@@ -117,22 +117,22 @@ func (p *PipeTokenizeProcessor) tokenizeEnglishDoc(packet *pb.Packet, output com
 	}
 	log.Debug().Msg("PipeTokenizeProcessor processes one data packet")
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }
 
 func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output common.ConcordanceChannel) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
 	file := &common.File{
 		Type: packet.DocType,
 		Name: packet.DocId,
 		Body: make([]string, 0),
 	}
-	if _, err := p.Storage.Readable(file); err != nil {
+	if _, err := p.storage.Readable(file); err != nil {
 		log.Error().Err(err)
 		return
 	}
-	if _, err := p.Storage.Get(file); err != nil {
+	if _, err := p.storage.Get(file); err != nil {
 		log.Error().Err(err)
 		return
 	}
@@ -151,8 +151,8 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 	}()
 
 	for _, line := range file.Body {
-		segments := p.ChSegmenter.Segment([]byte(line))
-		words := p.ChRegExp.FindAllString(sego.SegmentsToString(segments, false), -1)
+		segments := p.chSegmenter.Segment([]byte(line))
+		words := p.chRegExp.FindAllString(sego.SegmentsToString(segments, false), -1)
 		wordsCh <- common.WordsWrapper{Words: words}
 	}
 	close(wordsCh)
@@ -165,5 +165,5 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 	}
 	log.Debug().Msg("PipeTokenizeProcessor processes one data packet")
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }

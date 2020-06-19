@@ -15,16 +15,16 @@ import (
 
 // PipeParseProcessor 文本解析器.
 type PipeParseProcessor struct {
-	TokenBucket chan struct{}
-	Storage     storage.Persister
+	tokenBucket chan struct{}
+	storage     storage.Persister
 }
 
 // NewPipeParseProcessor 新建文本解析器.
 func NewPipeParseProcessor(storage storage.Persister) *PipeParseProcessor {
 	log.Info().Msg("load PipeParseProcessor plugin")
 	return &PipeParseProcessor{
-		TokenBucket: make(chan struct{}, 20),
-		Storage:     storage,
+		tokenBucket: make(chan struct{}, 20),
+		storage:     storage,
 	}
 }
 
@@ -59,9 +59,9 @@ LOOP_LABEL:
 
 // 用于解析中华人民共和国财政部发布的文章网页
 func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.PacketChannel) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
-	path, err := p.Storage.Readable(&common.File{
+	path, err := p.storage.Readable(&common.File{
 		Type: packet.DocType,
 		Name: packet.DocId,
 	})
@@ -88,7 +88,7 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 		body = append(body, strings.TrimSpace(s.Text()))
 	})
 
-	if _, err = p.Storage.Writable(&common.File{
+	if _, err = p.storage.Writable(&common.File{
 		Type: pb.DocType_TextDoc,
 		Name: packet.DocId,
 		Body: body,
@@ -96,7 +96,7 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 		log.Error().Err(err)
 		return
 	}
-	if _, err = p.Storage.Put(&common.File{
+	if _, err = p.storage.Put(&common.File{
 		Type: pb.DocType_TextDoc,
 		Name: packet.DocId,
 	}); err != nil {
@@ -110,5 +110,5 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 	}
 	log.Debug().Msg("PipeParseProcessor processes one data packet")
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }

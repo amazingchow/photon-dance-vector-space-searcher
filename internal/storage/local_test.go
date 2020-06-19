@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	pb "github.com/amazingchow/engine-vector-space-search-service/api"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 )
 
@@ -18,7 +19,7 @@ func TestLocalStorageReadOp(t *testing.T) {
 	assert.Empty(t, err)
 
 	file := &common.File{
-		Type: common.TextFile,
+		Type: pb.DocType_TextDoc,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作",
 	}
 	expectedBody := []string{
@@ -61,7 +62,7 @@ func TestLocalStorageWriteOp(t *testing.T) {
 	assert.Empty(t, err)
 
 	fileBk := &common.File{
-		Type: common.TextFile,
+		Type: pb.DocType_TextDoc,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作-备份",
 		Body: []string{
 			"财金〔2018〕93号",
@@ -90,7 +91,7 @@ func TestLocalStorageWriteOp(t *testing.T) {
 
 	// checksum
 	file1 := &common.File{
-		Type: common.TextFile,
+		Type: pb.DocType_TextDoc,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作",
 	}
 
@@ -105,7 +106,7 @@ func TestLocalStorageWriteOp(t *testing.T) {
 	assert.Empty(t, err)
 
 	file2 := &common.File{
-		Type: common.TextFile,
+		Type: pb.DocType_TextDoc,
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作-备份",
 	}
 

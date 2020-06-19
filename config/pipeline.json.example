@@ -17,5 +17,8 @@
         "use_ssl": false,
         "bucket": "engine-vector-space-search-service",
         "root": ""
+    },
+    "indexer": {
+        "dump_path": "./index.json"
     }
 }

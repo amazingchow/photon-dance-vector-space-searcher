@@ -14,16 +14,16 @@ import (
 
 // PipeStemmingProcessor 词干抽取器
 type PipeStemmingProcessor struct {
-	TokenBucket chan struct{}
-	Language    common.LanguageType
+	tokenBucket chan struct{}
+	language    common.LanguageType
 }
 
 // NewPipeStemmingProcessor 新建词干抽取器.
 func NewPipeStemmingProcessor(language common.LanguageType) *PipeStemmingProcessor {
 	log.Info().Msg("load PipeStemmingProcessor plugin")
 	return &PipeStemmingProcessor{
-		TokenBucket: make(chan struct{}, 20),
-		Language:    language,
+		tokenBucket: make(chan struct{}, 20),
+		language:    language,
 	}
 }
 
@@ -39,7 +39,7 @@ LOOP_LABEL:
 					close(output)
 					break LOOP_LABEL
 				}
-				switch p.Language {
+				switch p.language {
 				case common.LanguageTypeEnglish:
 					{
 						go p.applyEnglishStemming(packet, output)
@@ -61,7 +61,7 @@ LOOP_LABEL:
 }
 
 func (p *PipeStemmingProcessor) applyEnglishStemming(packet *common.ConcordanceWrapper, output common.ConcordanceChannel) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
 	for k, v := range packet.Concordance {
 		out := string(stemmer.Stem([]byte(k)))
@@ -84,11 +84,11 @@ func (p *PipeStemmingProcessor) applyEnglishStemming(packet *common.ConcordanceW
 	}
 	log.Debug().Msg("PipeStemmingProcessor processes one data packet")
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }
 
 func (p *PipeStemmingProcessor) applyChineseStemming(packet *common.ConcordanceWrapper, output common.ConcordanceChannel) {
-	p.TokenBucket <- struct{}{}
+	p.tokenBucket <- struct{}{}
 
 	// 词干提取是英文语料预处理的一个步骤, 中文并不需要
 
@@ -98,5 +98,5 @@ func (p *PipeStemmingProcessor) applyChineseStemming(packet *common.ConcordanceW
 	}
 	log.Debug().Msg("PipeStemmingProcessor processes one data packet")
 
-	<-p.TokenBucket
+	<-p.tokenBucket
 }

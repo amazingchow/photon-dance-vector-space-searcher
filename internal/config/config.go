@@ -1,12 +1,13 @@
 package conf
 
-// PipelineConfig 处理管道配置
+// PipelineConfig 处理管道配置.
 type PipelineConfig struct {
-	Kafka *KafkaConfig `json:"kafka"`
-	Minio *MinioConfig `json:"minio"`
+	Kafka   *KafkaConfig   `json:"kafka"`
+	Minio   *MinioConfig   `json:"minio"`
+	Indexer *IndexerConfig `json:"indexer"`
 }
 
-// KafkaConfig kafka连接配置
+// KafkaConfig kafka连接配置.
 type KafkaConfig struct {
 	Brokers      []string `json:"brokers"`
 	Topic        []string `json:"topic"`
@@ -15,7 +16,7 @@ type KafkaConfig struct {
 	FromOldest   bool     `json:"from_oldest"`
 }
 
-// MinioConfig minio连接配置
+// MinioConfig minio连接配置.
 type MinioConfig struct {
 	Endpoint  string `json:"endpoint"`
 	AccessKey string `json:"access_key"`
@@ -23,4 +24,9 @@ type MinioConfig struct {
 	UseSSL    bool   `json:"use_ssl"`
 	Bucket    string `json:"bucket"`
 	Root      string `json:"root"`
+}
+
+// IndexerConfig 索引结构配置.
+type IndexerConfig struct {
+	DumpPath string `json:"dump_path"`
 }
