@@ -18,7 +18,7 @@ import (
 	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
 )
 
-// S3Storage 提供s3持久化服务.
+// S3Storage 提供s3持久化服务
 type S3Storage struct {
 	cfg *conf.MinioConfig
 	cli *minio.Client

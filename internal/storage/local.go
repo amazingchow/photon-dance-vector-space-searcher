@@ -11,7 +11,7 @@ import (
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 )
 
-// LocalStorage 提供本地持久化服务.
+// LocalStorage 提供本地持久化服务
 type LocalStorage struct {
 	root string
 }

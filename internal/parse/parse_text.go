@@ -13,7 +13,7 @@ import (
 	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
 )
 
-// PipeParseProcessor 文本解析器.
+// PipeParseProcessor 文本解析器
 type PipeParseProcessor struct {
 	tokenBucket chan struct{}
 	storage     storage.Persister
@@ -28,7 +28,7 @@ func NewPipeParseProcessor(storage storage.Persister) *PipeParseProcessor {
 	}
 }
 
-// InfoExtract 解析中/英文本文件.
+// InfoExtract 解析中/英文文本文件.
 func (p *PipeParseProcessor) InfoExtract(pGroup *sync.WaitGroup, input common.PacketChannel, output common.PacketChannel) {
 	pGroup.Add(1)
 LOOP_LABEL:
@@ -59,7 +59,7 @@ LOOP_LABEL:
 	log.Info().Msg("unload PipeParseProcessor plugin")
 }
 
-// 用于解析中华人民共和国财政部发布的文章网页
+// 用于解析中华人民共和国财政部发布的文章网页.
 func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.PacketChannel) {
 	p.tokenBucket <- struct{}{}
 

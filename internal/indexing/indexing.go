@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/bits"
+	"math"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -19,26 +20,27 @@ import (
 
 const (
 	// DocCapacity 支持的最大文档总量
-	DocCapacity uint64 = 1e5
+	DocCapacity uint64 = 1e4
 	// VocabularyCapacity 支持的最大词汇总量
-	VocabularyCapacity uint64 = 1e6
+	VocabularyCapacity uint64 = 1e5
 
 	_BitPerWord uint64 = 64
 	_Shift      uint64 = 6
 	_Mask       uint64 = 0x3f
 )
 
-// PipeIndexProcessor 索引器.
-// 目前规划最大支持100万词汇量, 10万文档.
+// PipeIndexProcessor 索引器
+// 目前规划最大支持10万词汇量, 1万文档.
 type PipeIndexProcessor struct {
 	cfg         *conf.IndexerConfig
 	tokenBucket chan struct{}
 	indexer     InvertedIndex
+	tfidf       TFIDF
 	storage     storage.Persister
 	available   int32
 }
 
-// InvertedIndex 倒排索引数据结构.
+// InvertedIndex 倒排索引数据结构
 type InvertedIndex struct {
 	mu              sync.Mutex
 	Doc             uint64                  `json:"doc"`
@@ -48,28 +50,38 @@ type InvertedIndex struct {
 	Dict            map[string]*PostingList `json:"dict"`
 }
 
-// DocStore 存储文档记录.
+// DocStore 用于存储文档记录
 type DocStore struct {
 	BitSet []uint64 `json:"bit_set"`
 }
 
-// VocabularyStore 存储词汇量记录.
+// VocabularyStore 用于存储词汇量记录
 type VocabularyStore struct {
 	BitSet []uint64 `json:"bit_set"`
 }
 
-// PostingList 信息列表.
+// PostingList 信息列表
 type PostingList struct {
 	TermID       string   `json:"term_id"`
 	DocFrequency uint32   `json:"doc_frequency"`
 	Postings     *Posting `json:"postings"`
 }
 
-// Posting 信息单元.
+// Posting 信息单元
 type Posting struct {
 	TermFrequency uint32   `json:"term_frequency"`
 	DocID         string   `json:"doc_id"`
 	Next          *Posting `json:"next"`
+}
+
+// TFIDF TF-IDF数据结构
+type TFIDF struct {
+	Vectors []*Vector
+}
+
+// Vector 文档向量
+type Vector struct {
+	Space []float32
 }
 
 // NewPipeIndexProcessor 新建索引器.
@@ -150,6 +162,7 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 			termID := fmt.Sprintf("%010d", p.indexer.Vocabulary)
 			p.indexer.VocabularyStore.set(termID)
 			p.indexer.Vocabulary++
+
 			p.indexer.Dict[term] = &PostingList{
 				TermID:       termID,
 				DocFrequency: 1,
@@ -209,6 +222,28 @@ func (p *PipeIndexProcessor) MarkServiceUnavailable() {
 // ServiceAvailable 服务是否可用.
 func (p *PipeIndexProcessor) ServiceAvailable() bool {
 	return atomic.LoadInt32(&(p.available)) == 1
+}
+
+// BuildTFIDF 构造TF-IDF数据结构.
+func (p *PipeIndexProcessor) BuildTFIDF() {
+	p.tfidf = TFIDF{
+		Vectors: make([]*Vector, p.indexer.Doc),
+	}
+	var i uint64
+	for i = 0; i < p.indexer.Doc; i++ {
+		p.tfidf.Vectors[i] = &Vector{
+			Space: make([]float32, p.indexer.Vocabulary),
+		}
+	}
+	var	cur *Posting
+	D := p.indexer.Doc
+	for _, pl := range p.indexer.Dict {
+		termIdx, _ := strconv.ParseUint(pl.TermID, 10, 64)
+		for cur = pl.Postings.Next; cur != nil; cur = cur.Next {
+			docIdx, _ := strconv.ParseUint(cur.DocID, 10, 64)
+			p.tfidf.Vectors[docIdx].Space[termIdx] = float32(cur.TermFrequency) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
+		}
+	}
 }
 
 func (m *DocStore) set(docID string) {

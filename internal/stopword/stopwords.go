@@ -1,7 +1,7 @@
 package stopword
 
 var (
-	// EnStopWords is default English stopwords list
+	// EnStopWords 英文停词表
 	EnStopWords = map[string]struct{}{
 		"a":             struct{}{},
 		"i":             struct{}{},
@@ -566,7 +566,7 @@ var (
 		"unfortunately": struct{}{},
 	}
 
-	// ChStopWords is default Chinese stopwords list
+	// ChStopWords 中文停词表
 	ChStopWords = map[string]struct{}{
 		"一":       struct{}{},
 		"与":       struct{}{},
@@ -2083,7 +2083,7 @@ var (
 		"打开天窗说亮话": struct{}{},
 	}
 
-	// SpStopWords is special stopwords list
+	// SpStopWords 特殊词停词表
 	SpStopWords = map[string]struct{}{
 		"?":                   struct{}{},
 		"“":                   struct{}{},

@@ -12,7 +12,7 @@ import (
 	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
 )
 
-// CustomConsumerGroupHandler 自定义消费句柄.
+// CustomConsumerGroupHandler 自定义消费句柄
 type CustomConsumerGroupHandler struct {
 	once    sync.Once
 	cfg     *conf.KafkaConfig
@@ -37,8 +37,8 @@ func (h *CustomConsumerGroupHandler) Setup(session sarama.ConsumerGroupSession) 
 }
 
 // Cleanup sarama.ConsumerGroupHandler接口定义实现.
-// Cleanup() hook is called to allow the user to perform any final tasks before a rebalance
-// once all the ConsumeClaim() loops have exited.
+// Cleanup() hook is called to allow the user to perform any final tasks
+// before a rebalance once all the ConsumeClaim() loops have exited.
 func (h *CustomConsumerGroupHandler) Cleanup(session sarama.ConsumerGroupSession) error {
 	return nil
 }

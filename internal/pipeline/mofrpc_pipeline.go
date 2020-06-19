@@ -41,7 +41,7 @@ type MOFRPCContainer struct {
 	exit   chan struct{}
 }
 
-// NewMOFRPCContainer 新建MOFRPC数据容器.
+// NewMOFRPCContainer 新建MOF-RPC数据容器.
 func NewMOFRPCContainer(cfg *conf.PipelineConfig) (*MOFRPCContainer, error) {
 	h := &MOFRPCContainer{
 		cfg: cfg,
@@ -88,7 +88,7 @@ func (h *MOFRPCContainer) process() {
 	go h.indexer.TermsIndexing(h.pGroup, h.indexerInput)
 }
 
-// Run 运行MOFRPC数据容器.
+// Run 运行MOF-RPC数据容器.
 func (h *MOFRPCContainer) Run() {
 LOOP:
 	for {
@@ -116,7 +116,7 @@ LOOP:
 	h.exit <- struct{}{}
 }
 
-// Stop 停止运行MOFRPC数据容器.
+// Stop 停止运行MOF-RPC数据容器 (并发安全).
 func (h *MOFRPCContainer) Stop() {
 	log.Info().Msg("try to close pipeline container ...")
 	h.once.Do(func() {
