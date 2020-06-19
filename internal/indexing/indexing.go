@@ -11,6 +11,7 @@ import (
 	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
 	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
+	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
 )
 
 // PipeIndexProcessor 索引器.
@@ -133,19 +134,23 @@ func (p *PipeIndexProcessor) Dump() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot dump terms indexing")
 	}
-	if err = ioutil.WriteFile("index.json", serialization, 0644); err != nil {
+	if err = ioutil.WriteFile(p.cfg.DumpPath, serialization, 0644); err != nil {
 		log.Fatal().Err(err).Msg("cannot dump terms indexing")
 	}
+	log.Info().Msgf("dump terms indexing to file=%s", p.cfg.DumpPath)
 }
 
 // Load 从存储硬件加载索引结构.
 func (p *PipeIndexProcessor) Load() {
-	deserialization, err := ioutil.ReadFile("index.json")
-	if err != nil {
-		log.Fatal().Err(err).Msg("cannot load terms indexing")
-	}
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-	if err = json.Unmarshal(deserialization, &(p.indexer)); err != nil {
-		log.Fatal().Err(err).Msg("cannot load terms indexing")
+	if utils.FileExist(p.cfg.DumpPath) {
+		deserialization, err := ioutil.ReadFile(p.cfg.DumpPath)
+		if err != nil {
+			log.Fatal().Err(err).Msg("cannot load terms indexing")
+		}
+		var json = jsoniter.ConfigCompatibleWithStandardLibrary
+		if err = json.Unmarshal(deserialization, &(p.indexer)); err != nil {
+			log.Fatal().Err(err).Msg("cannot load terms indexing")
+		}
+		log.Info().Msgf("load terms indexing from file=%s", p.cfg.DumpPath)
 	}
 }

@@ -81,6 +81,7 @@ func NewMOFRPCContainer(cfg *conf.PipelineConfig) (*MOFRPCContainer, error) {
 }
 
 func (h *MOFRPCContainer) process() {
+	h.indexer.Load()
 	go h.parser.InfoExtract(h.pGroup, h.parserInput, h.tokenizerInput)
 	go h.tokenizer.InfoTokenize(h.pGroup, h.tokenizerInput, h.stoperInput)
 	go h.stoper.RemoveStopWords(h.pGroup, h.stoperInput, h.stemmerInput)

@@ -12,13 +12,24 @@ import (
 )
 
 // FileSize 计算文件大小.
-func FileSize(file string) int64 {
-	fd, err := os.Stat(file)
+func FileSize(fn string) int64 {
+	fd, err := os.Stat(fn)
 	if err != nil {
-		log.Error().Err(err).Msgf("cannot stat file, file=%s", file)
+		log.Error().Err(err).Msgf("cannot stat file, file=%s", fn)
 		return 0
 	}
 	return fd.Size()
+}
+
+// FileExist 检查文件是否存在.
+func FileExist(fn string) bool {
+	if _, err := os.Stat(fn); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+		log.Fatal().Err(err).Msgf("cannot stat file, file=%s", fn)
+	}
+	return true
 }
 
 // BackoffPolicy 自定义backoff策略.
