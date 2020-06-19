@@ -15,10 +15,18 @@ enum DocType {
   TextDoc = 1;
 }
 
+enum PacketDeliveryStatus {
+  // 数据包派送中
+  InDelivery = 0;
+  // 数据包派送完毕或无数据可供派送
+  OutOfStock = 1;
+}
+
 // 传输数据包.
 message Packet {
   WebStation web_station = 1;
   DocType doc_type = 2;
   string doc_id = 3;
   string doc_title = 4;
+  PacketDeliveryStatus delivery_status = 5;
 }
