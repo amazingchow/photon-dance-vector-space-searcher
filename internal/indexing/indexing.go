@@ -3,6 +3,8 @@ package indexing
 import (
 	"fmt"
 	"io/ioutil"
+	"math/bits"
+	"strconv"
 	"sync"
 	"sync/atomic"
 
@@ -15,7 +17,19 @@ import (
 	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
 )
 
+const (
+	// DocCapacity 支持的最大文档总量
+	DocCapacity uint64 = 1e5
+	// VocabularyCapacity 支持的最大词汇总量
+	VocabularyCapacity uint64 = 1e6
+
+	_BitPerWord uint64 = 64
+	_Shift      uint64 = 6
+	_Mask       uint64 = 0x3f
+)
+
 // PipeIndexProcessor 索引器.
+// 目前规划最大支持100万词汇量, 10万文档.
 type PipeIndexProcessor struct {
 	cfg         *conf.IndexerConfig
 	tokenBucket chan struct{}
@@ -26,9 +40,22 @@ type PipeIndexProcessor struct {
 
 // InvertedIndex 倒排索引数据结构.
 type InvertedIndex struct {
-	mu         sync.Mutex
-	Vocabulary uint32
-	Dict       map[string]*PostingList `json:"dict"`
+	mu              sync.Mutex
+	Doc             uint64                  `json:"doc"`
+	DocStore        *DocStore               `json:"doc_store"`
+	Vocabulary      uint64                  `json:"vocabulary"`
+	VocabularyStore *VocabularyStore        `json:"vocabulary_store"`
+	Dict            map[string]*PostingList `json:"dict"`
+}
+
+// DocStore 存储文档记录.
+type DocStore struct {
+	BitSet []uint64 `json:"bit_set"`
+}
+
+// VocabularyStore 存储词汇量记录.
+type VocabularyStore struct {
+	BitSet []uint64 `json:"bit_set"`
 }
 
 // PostingList 信息列表.
@@ -54,8 +81,11 @@ func NewPipeIndexProcessor(cfg *conf.IndexerConfig, storage storage.Persister) *
 		available:   0,
 	}
 	p.indexer = InvertedIndex{
-		Vocabulary: 0,
-		Dict:       make(map[string]*PostingList),
+		Doc:             0,
+		DocStore:        &DocStore{BitSet: make([]uint64, uint64(DocCapacity/_BitPerWord)+1)},
+		Vocabulary:      0,
+		VocabularyStore: &VocabularyStore{BitSet: make([]uint64, uint64(VocabularyCapacity/_BitPerWord)+1)},
+		Dict:            make(map[string]*PostingList),
 	}
 	log.Info().Msg("load PipeIndexProcessor plugin")
 	return p
@@ -82,6 +112,12 @@ LOOP_LABEL:
 
 func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 	p.tokenBucket <- struct{}{}
+
+	if p.indexer.DocStore.exist(packet.DocID) {
+		return
+	}
+	p.indexer.DocStore.set(packet.DocID)
+	p.indexer.Doc++
 
 	for term, freq := range packet.Concordance {
 		list, ok := p.indexer.Dict[term]
@@ -111,9 +147,11 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 			p.indexer.Dict[term].Postings = cur
 			p.indexer.Dict[term].DocFrequency++
 		} else {
+			termID := fmt.Sprintf("%010d", p.indexer.Vocabulary)
+			p.indexer.VocabularyStore.set(termID)
 			p.indexer.Vocabulary++
 			p.indexer.Dict[term] = &PostingList{
-				TermID:       fmt.Sprintf("%010d", p.indexer.Vocabulary),
+				TermID:       termID,
 				DocFrequency: 1,
 				Postings: &Posting{
 					Next: nil,
@@ -171,4 +209,34 @@ func (p *PipeIndexProcessor) MarkServiceUnavailable() {
 // ServiceAvailable 服务是否可用.
 func (p *PipeIndexProcessor) ServiceAvailable() bool {
 	return atomic.LoadInt32(&(p.available)) == 1
+}
+
+func (m *DocStore) set(docID string) {
+	i, _ := strconv.ParseUint(docID, 10, 64)
+	m.BitSet[i>>_Shift] |= (1 << (i & _Mask))
+}
+
+func (m *DocStore) clear(docID string) {
+	i, _ := strconv.ParseUint(docID, 10, 64)
+	m.BitSet[i>>_Shift] &= bits.Reverse64(1 << (i & _Mask))
+}
+
+func (m *DocStore) exist(docID string) bool {
+	i, _ := strconv.ParseUint(docID, 10, 64)
+	return m.BitSet[i>>_Shift]&(1<<(i&_Mask)) != 0
+}
+
+func (m *VocabularyStore) set(termID string) {
+	i, _ := strconv.ParseUint(termID, 10, 64)
+	m.BitSet[i>>_Shift] |= (1 << (i & _Mask))
+}
+
+func (m *VocabularyStore) clear(termID string) {
+	i, _ := strconv.ParseUint(termID, 10, 64)
+	m.BitSet[i>>_Shift] &= bits.Reverse64(1 << (i & _Mask))
+}
+
+func (m *VocabularyStore) exist(termID string) bool {
+	i, _ := strconv.ParseUint(termID, 10, 64)
+	return m.BitSet[i>>_Shift]&(1<<(i&_Mask)) != 0
 }
