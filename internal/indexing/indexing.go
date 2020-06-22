@@ -3,8 +3,8 @@ package indexing
 import (
 	"fmt"
 	"io/ioutil"
-	"math/bits"
 	"math"
+	"math/bits"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -81,6 +81,7 @@ type TFIDF struct {
 
 // Vector 文档向量
 type Vector struct {
+	DocID string
 	Space []float32
 }
 
@@ -235,12 +236,13 @@ func (p *PipeIndexProcessor) BuildTFIDF() {
 			Space: make([]float32, p.indexer.Vocabulary),
 		}
 	}
-	var	cur *Posting
+	var cur *Posting
 	D := p.indexer.Doc
 	for _, pl := range p.indexer.Dict {
 		termIdx, _ := strconv.ParseUint(pl.TermID, 10, 64)
 		for cur = pl.Postings.Next; cur != nil; cur = cur.Next {
 			docIdx, _ := strconv.ParseUint(cur.DocID, 10, 64)
+			p.tfidf.Vectors[docIdx].DocID = cur.DocID
 			p.tfidf.Vectors[docIdx].Space[termIdx] = float32(cur.TermFrequency) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
 		}
 	}
