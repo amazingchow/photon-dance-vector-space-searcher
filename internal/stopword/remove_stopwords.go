@@ -56,6 +56,31 @@ LOOP_LABEL:
 	log.Info().Msg("unload PipeStopWordsProcessor plugin")
 }
 
+// QueryRemoveStopWords 移除查询语句中的停词.
+func (p *PipeStopWordsProcessor) QueryRemoveStopWords(language common.LanguageType, concordance map[string]uint64) {
+	p.tokenBucket <- struct{}{}
+
+	if language == common.LanguageTypeEnglish {
+		for k := range concordance {
+			if _, ok := EnStopWords[k]; ok {
+				delete(concordance, k)
+			} else if _, ok := SpStopWords[k]; ok {
+				delete(concordance, k)
+			}
+		}
+	} else if language == common.LanguageTypeChinsese {
+		for k := range concordance {
+			if _, ok := ChStopWords[k]; ok {
+				delete(concordance, k)
+			} else if _, ok := SpStopWords[k]; ok {
+				delete(concordance, k)
+			}
+		}
+	}
+
+	<-p.tokenBucket
+}
+
 func (p *PipeStopWordsProcessor) removeEnglishStopWords(packet *common.ConcordanceWrapper, output common.ConcordanceChannel) {
 	p.tokenBucket <- struct{}{}
 

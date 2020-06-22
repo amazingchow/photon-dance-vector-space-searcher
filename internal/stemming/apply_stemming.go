@@ -60,6 +60,32 @@ LOOP_LABEL:
 	log.Info().Msg("unload PipeStemmingProcessor plugin")
 }
 
+// QueryApplyStemming 抽取查询语句中的词干.
+func (p *PipeStemmingProcessor) QueryApplyStemming(language common.LanguageType, concordance map[string]uint64) {
+	p.tokenBucket <- struct{}{}
+
+	if language == common.LanguageTypeEnglish {
+		for k, v := range concordance {
+			out := string(stemmer.Stem([]byte(k)))
+			if vv, ok := concordance[out]; ok {
+				concordance[out] = vv + v
+				concordance[k] -= v
+			} else {
+				concordance[out] = v
+			}
+		}
+		for k, v := range concordance {
+			if v == 0 {
+				delete(concordance, k)
+			}
+		}
+	} else if language == common.LanguageTypeChinsese {
+		// 词干提取是英文语料预处理的一个步骤, 中文并不需要
+	}
+
+	<-p.tokenBucket
+}
+
 func (p *PipeStemmingProcessor) applyEnglishStemming(packet *common.ConcordanceWrapper, output common.ConcordanceChannel) {
 	p.tokenBucket <- struct{}{}
 

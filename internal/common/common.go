@@ -43,7 +43,7 @@ type WordsWrapper struct {
 // ConcordanceWrapper 封装concordance
 type ConcordanceWrapper struct {
 	DocID       string
-	Concordance map[string]uint32
+	Concordance map[string]uint64
 }
 
 // PacketChannel 用于传输pb.Packet

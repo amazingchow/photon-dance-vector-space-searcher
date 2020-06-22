@@ -91,7 +91,7 @@ func (p *PipeTokenizeProcessor) tokenizeEnglishDoc(packet *pb.Packet, output com
 		return
 	}
 
-	concordance := make(map[string]uint32)
+	concordance := make(map[string]uint64)
 	wordsCh := make(chan common.WordsWrapper, 10)
 	exit := make(chan struct{})
 
@@ -139,7 +139,7 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 		return
 	}
 
-	concordance := make(map[string]uint32)
+	concordance := make(map[string]uint64)
 	wordsCh := make(chan common.WordsWrapper, 10)
 	exit := make(chan struct{})
 
@@ -166,6 +166,27 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 		Concordance: concordance,
 	}
 	log.Debug().Msg("PipeTokenizeProcessor processes one data packet")
+
+	<-p.tokenBucket
+}
+
+// QueryTokenize 对查询语句进行分词.
+func (p *PipeTokenizeProcessor) QueryTokenize(query string, language common.LanguageType, concordance map[string]uint64) {
+	p.tokenBucket <- struct{}{}
+
+	if language == common.LanguageTypeEnglish {
+		fc := func(r rune) bool { return !unicode.IsLetter(r) }
+		words := strings.FieldsFunc(query, fc)
+		for _, w := range words {
+			concordance[strings.ToLower(w)]++
+		}
+	} else if language == common.LanguageTypeChinsese {
+		segments := p.chSegmenter.Segment([]byte(query))
+		words := p.chRegExp.FindAllString(sego.SegmentsToString(segments, false), -1)
+		for _, w := range words {
+			concordance[w]++
+		}
+	}
 
 	<-p.tokenBucket
 }
