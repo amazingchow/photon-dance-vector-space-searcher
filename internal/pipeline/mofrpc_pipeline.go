@@ -4,8 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
-
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 
@@ -14,11 +12,13 @@ import (
 	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/indexing"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/kafka"
+	"github.com/amazingchow/engine-vector-space-search-service/internal/mysql"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/parse"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/stemming"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/stopword"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
 	"github.com/amazingchow/engine-vector-space-search-service/internal/tokenize"
+	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
 )
 
 // MOFRPCContainer 中华人民共和国财政部网站文章语料数据容器.
@@ -28,6 +28,7 @@ type MOFRPCContainer struct {
 
 	consumer *kafka.CustomConsumerGroupHandler
 	storage  storage.Persister
+	db       *mysql.Client
 
 	parser         *parse.PipeParseProcessor
 	parserInput    common.PacketChannel
@@ -62,6 +63,11 @@ func NewMOFRPCContainer(cfg *conf.PipelineConfig) *MOFRPCContainer {
 		log.Fatal().Err(err)
 	}
 	if err = h.storage.Init(); err != nil {
+		log.Fatal().Err(err)
+	}
+
+	h.db = mysql.NewClient(h.cfg.MySQL)
+	if err = h.db.Setup(); err != nil {
 		log.Fatal().Err(err)
 	}
 
@@ -134,6 +140,7 @@ func (h *MOFRPCContainer) Stop() {
 		h.pGroup.Wait()
 		h.indexer.Dump()
 		h.storage.Destroy() // nolint
+		h.db.Close()        // nolint
 	})
 	<-h.exit
 	log.Info().Msg("pipeline container has been closed")
@@ -167,10 +174,15 @@ func (h *MOFRPCContainer) Query(ctx context.Context, topk uint32, query string) 
 		return nil, utils.ErrContextDone
 	}
 
-	h.indexer.TopK(topk, q)
+	docIDList := h.indexer.TopK(topk, q)
 	if utils.IsContextDone(ctx) {
 		return nil, utils.ErrContextDone
 	}
 
-	return nil, nil
+	docTitileList := make([]string, len(docIDList))
+	for idx, id := range docIDList {
+		docTitileList[idx] = h.db.Query(id)
+	}
+
+	return docTitileList, nil
 }

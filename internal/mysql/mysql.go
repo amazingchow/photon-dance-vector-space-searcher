@@ -31,7 +31,7 @@ type Doc struct {
 }
 
 // Setup 初始化MySQL连接服务.
-func (cli *Client) Setup() {
+func (cli *Client) Setup() error {
 	var err error
 
 	args := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
@@ -39,13 +39,18 @@ func (cli *Client) Setup() {
 
 	cli.db, err = gorm.Open("mysql", args)
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Error().Err(err).Msg("cannot create mysql client")
+		return err
 	}
+
+	log.Info().Msg("load mysql plugin")
+	return nil
 }
 
 // Close 关闭MySQL连接服务.
-func (cli *Client) Close() {
-	cli.db.Close()
+func (cli *Client) Close() error {
+	log.Info().Msg("unload mysql plugin")
+	return cli.db.Close()
 }
 
 // Query 根据文档ID查找数据库中对应的文档名.
