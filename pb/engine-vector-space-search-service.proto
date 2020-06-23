@@ -44,8 +44,8 @@ message QueryResponse { repeated string docs = 1; }
 message GetSystemInfoRequest {}
 
 enum ServiceStatus {
-  Available = 0;
-  Unavailable = 1;
+  Unavailable = 0;
+  Available = 1;
 }
 
 message GetSystemInfoResponse {

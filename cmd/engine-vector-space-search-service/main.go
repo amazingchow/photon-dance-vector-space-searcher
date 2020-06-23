@@ -47,7 +47,12 @@ func (qss *QueryServiceServer) Query(ctx context.Context, req *pb.QueryRequest) 
 
 	docs, err := qss.container.Query(ctx, req.GetTopk(), req.GetQuery())
 	if err != nil {
-		return nil, status.Errorf(codes.Unavailable, err.Error())
+		if err == utils.ErrServiceUnavailable {
+			return nil, status.Errorf(codes.Unavailable, err.Error())
+		} else if err == utils.ErrContextDone {
+			return nil, status.Errorf(codes.DeadlineExceeded, err.Error())
+		}
+		return nil, status.Errorf(codes.Unknown, err.Error())
 	}
 
 	return &pb.QueryResponse{
@@ -57,7 +62,17 @@ func (qss *QueryServiceServer) Query(ctx context.Context, req *pb.QueryRequest) 
 
 // GetSystemInfo 获取系统信息接口.
 func (qss *QueryServiceServer) GetSystemInfo(ctx context.Context, req *pb.GetSystemInfoRequest) (*pb.GetSystemInfoResponse, error) {
-	return &pb.GetSystemInfoResponse{}, nil
+	info, err := qss.container.GetSystemInfo()
+	if err != nil {
+		if err == utils.ErrServiceUnavailable {
+			return nil, status.Errorf(codes.Unavailable, err.Error())
+		} else if err == utils.ErrContextDone {
+			return nil, status.Errorf(codes.DeadlineExceeded, err.Error())
+		}
+		return nil, status.Errorf(codes.Unknown, err.Error())
+	}
+
+	return info, nil
 }
 
 func serverGRPCService(ctx context.Context, qss *QueryServiceServer, cfg *conf.ServiceConfig, stopGroup *sync.WaitGroup, stopCh chan struct{}) {

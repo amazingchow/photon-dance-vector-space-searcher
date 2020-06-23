@@ -13,6 +13,8 @@ import (
 )
 
 var (
+	// ErrServiceUnavailable 服务不可用错误
+	ErrServiceUnavailable = fmt.Errorf("service unavailable")
 	// ErrContextDone context超时错误
 	ErrContextDone = fmt.Errorf("context done")
 )

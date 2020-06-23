@@ -149,7 +149,7 @@ func (h *MOFRPCContainer) Stop() {
 // Query 利用关键词查询相似文档.
 func (h *MOFRPCContainer) Query(ctx context.Context, topk uint32, query string) ([]string, error) {
 	if !h.indexer.ServiceAvailable() {
-		return nil, indexing.ErrServiceUnavailable
+		return nil, utils.ErrServiceUnavailable
 	}
 
 	concordance := make(map[string]uint64)
@@ -185,4 +185,19 @@ func (h *MOFRPCContainer) Query(ctx context.Context, topk uint32, query string) 
 	}
 
 	return docTitileList, nil
+}
+
+// GetSystemInfo 获取系统信息.
+func (h *MOFRPCContainer) GetSystemInfo() (*pb.GetSystemInfoResponse, error) {
+	if !h.indexer.ServiceAvailable() {
+		return nil, utils.ErrServiceUnavailable
+	}
+
+	return &pb.GetSystemInfoResponse{
+		DocumentCapacity:   h.indexer.GetDocCapacity(),
+		Document:           h.indexer.GetDoc(),
+		VocabularyCapacity: h.indexer.GetVocabularyCapacity(),
+		Vocabulary:         h.indexer.GetVocabulary(),
+		ServiceStatus:      pb.ServiceStatus_Available,
+	}, nil
 }

@@ -118,10 +118,10 @@
     "engine_vector_space_search_serviceServiceStatus": {
       "type": "string",
       "enum": [
-        "Available",
-        "Unavailable"
+        "Unavailable",
+        "Available"
       ],
-      "default": "Available"
+      "default": "Unavailable"
     },
     "protobufAny": {
       "type": "object",

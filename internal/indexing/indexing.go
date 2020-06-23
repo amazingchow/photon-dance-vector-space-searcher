@@ -20,10 +20,10 @@ import (
 )
 
 const (
-	// DocCapacity 支持的最大文档总量
-	DocCapacity uint64 = 1e4
-	// VocabularyCapacity 支持的最大词汇总量
-	VocabularyCapacity uint64 = 1e5
+	// 支持的文档总量上限
+	_DocCapacity uint64 = 1e4
+	// 支持的词汇总量上限
+	_VocabularyCapacity uint64 = 1e5
 
 	_BitPerWord uint64 = 64
 	_Shift      uint64 = 6
@@ -111,9 +111,9 @@ func NewPipeIndexProcessor(cfg *conf.IndexerConfig, storage storage.Persister) *
 	}
 	p.indexer = InvertedIndex{
 		Doc:             0,
-		DocStore:        &DocStore{BitSet: make([]uint64, uint64(DocCapacity/_BitPerWord)+1)},
+		DocStore:        &DocStore{BitSet: make([]uint64, uint64(_DocCapacity/_BitPerWord)+1)},
 		Vocabulary:      0,
-		VocabularyStore: &VocabularyStore{BitSet: make([]uint64, uint64(VocabularyCapacity/_BitPerWord)+1)},
+		VocabularyStore: &VocabularyStore{BitSet: make([]uint64, uint64(_VocabularyCapacity/_BitPerWord)+1)},
 		Dict:            make(map[string]*PostingList),
 	}
 	log.Info().Msg("load PipeIndexProcessor plugin")
@@ -240,11 +240,6 @@ func (p *PipeIndexProcessor) MarkServiceUnavailable() {
 	atomic.StoreInt32(&(p.available), 0)
 }
 
-var (
-	// ErrServiceUnavailable 服务不可用错误
-	ErrServiceUnavailable = fmt.Errorf("service unavailable")
-)
-
 // ServiceAvailable 服务是否可用.
 func (p *PipeIndexProcessor) ServiceAvailable() bool {
 	return atomic.LoadInt32(&(p.available)) == 1
@@ -335,6 +330,26 @@ func (p *PipeIndexProcessor) TopK(k uint32, q *QueryVector) []string {
 	}
 
 	return ret
+}
+
+// GetDocCapacity 返回文档总量上限.
+func (p *PipeIndexProcessor) GetDocCapacity() uint64 {
+	return _DocCapacity
+}
+
+// GetDoc 返回文档总量.
+func (p *PipeIndexProcessor) GetDoc() uint64 {
+	return p.indexer.Doc
+}
+
+// GetVocabularyCapacity 返回词汇总量上限.
+func (p *PipeIndexProcessor) GetVocabularyCapacity() uint64 {
+	return _VocabularyCapacity
+}
+
+// GetVocabulary 返回词汇总量.
+func (p *PipeIndexProcessor) GetVocabulary() uint64 {
+	return p.indexer.Vocabulary
 }
 
 func (pq PriorityQueue) Len() int {
