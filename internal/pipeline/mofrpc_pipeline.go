@@ -72,26 +72,31 @@ func NewMOFRPCContainer(cfg *conf.PipelineConfig) *MOFRPCContainer {
 	}
 
 	h.parser = parse.NewPipeParseProcessor(h.storage)
-	h.parserInput = make(common.PacketChannel)
+	h.parserInput = make(common.PacketChannel, 20)
 	h.tokenizer = tokenize.NewPipeTokenizeProcessor(h.storage, common.LanguageTypeChinsese)
-	h.tokenizerInput = make(common.PacketChannel)
+	h.tokenizerInput = make(common.PacketChannel, 20)
 	h.stoper = stopword.NewPipeStopWordsProcessor(common.LanguageTypeChinsese)
-	h.stoperInput = make(common.ConcordanceChannel)
+	h.stoperInput = make(common.ConcordanceChannel, 20)
 	h.stemmer = stemming.NewPipeStemmingProcessor(common.LanguageTypeChinsese)
-	h.stemmerInput = make(common.ConcordanceChannel)
+	h.stemmerInput = make(common.ConcordanceChannel, 20)
 	h.indexer = indexing.NewPipeIndexProcessor(h.cfg.Indexer, h.storage)
-	h.indexerInput = make(common.ConcordanceChannel)
+	h.indexerInput = make(common.ConcordanceChannel, 20)
 
 	h.pGroup = new(sync.WaitGroup)
 	h.exit = make(chan struct{})
 
-	go h.process()
+	go h.process(cfg.Indexer.Load)
 
 	return h
 }
 
-func (h *MOFRPCContainer) process() {
-	h.indexer.Load()
+func (h *MOFRPCContainer) process(load bool) {
+	if load {
+		h.indexer.MarkServiceUnavailable()
+		h.indexer.Load()
+		h.indexer.BuildTFIDF()
+		h.indexer.MarkServiceAvailable()
+	}
 	go h.parser.InfoExtract(h.pGroup, h.parserInput, h.tokenizerInput)
 	go h.tokenizer.InfoTokenize(h.pGroup, h.tokenizerInput, h.stoperInput)
 	go h.stoper.RemoveStopWords(h.pGroup, h.stoperInput, h.stemmerInput)
@@ -119,6 +124,7 @@ LOOP:
 					h.indexer.MarkServiceUnavailable()
 					h.parserInput <- packet
 				} else if packet.DeliveryStatus == pb.PacketDeliveryStatus_OutOfStock {
+					h.indexer.BuildTFIDF()
 					h.indexer.MarkServiceAvailable()
 				}
 			}

@@ -190,9 +190,14 @@ func main() {
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 LOOP:
-	for s := range sigCh {
-		log.Info().Msgf("receive signal %v", s)
-		break LOOP
+	for { // nolint
+		select {
+		case s := <-sigCh:
+			{
+				log.Info().Msgf("receive signal %v", s)
+				break LOOP
+			}
+		}
 	}
 	// send stop signal to grpc service and http service
 	close(stopCh)

@@ -1,6 +1,6 @@
 {
-    "http_endpoint": "localhost:18080",
-    "grpc_endpoint": "localhost:18081",
+    "http_endpoint": "localhost:18180",
+    "grpc_endpoint": "localhost:18181",
     "pipeline": {
         "kafka": {
             "brokers": [
@@ -30,6 +30,7 @@
 
         },
         "indexer": {
+            "load": false,
             "dump_path": "./index.json"
         }
     }

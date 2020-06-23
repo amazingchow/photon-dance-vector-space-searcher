@@ -47,7 +47,7 @@ type InvertedIndex struct {
 	DocStore         *DocStore               `json:"doc_store"`
 	Vocabulary       uint64                  `json:"vocabulary"`
 	VocabularyStore  *VocabularyStore        `json:"vocabulary_store"`
-	Dict             map[string]*PostingList `json:"dict"`
+	Dict             map[string]*PostingList `json:"dict"` // TODO: 使用分段技术
 	MaxTermFrequency uint64                  `json:"max_term_frequency"`
 }
 
@@ -71,6 +71,7 @@ type PostingList struct {
 // Posting 信息单元
 type Posting struct {
 	TermFrequency uint64   `json:"term_frequency"`
+	DocIdx        uint64   `json:"doc_idx"`
 	DocID         string   `json:"doc_id"`
 	Next          *Posting `json:"next"`
 }
@@ -105,9 +106,9 @@ type PriorityQueue []*SimilarObject
 func NewPipeIndexProcessor(cfg *conf.IndexerConfig, storage storage.Persister) *PipeIndexProcessor {
 	p := &PipeIndexProcessor{
 		cfg:         cfg,
-		tokenBucket: make(chan struct{}, 20),
+		tokenBucket: make(chan struct{}, 1),
 		storage:     storage,
-		available:   0,
+		available:   1,
 	}
 	p.indexer = InvertedIndex{
 		Doc:             0,
@@ -131,7 +132,7 @@ LOOP_LABEL:
 				if !ok {
 					break LOOP_LABEL
 				}
-				go p.indexing(packet)
+				p.indexing(packet)
 			}
 		default:
 			{
@@ -153,15 +154,16 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 	p.indexer.Doc++
 
 	for term, freq := range packet.Concordance {
-		list, ok := p.indexer.Dict[term]
+		_, ok := p.indexer.Dict[term]
 		if ok {
-			cur := list.Postings
+			cur := p.indexer.Dict[term].Postings
 			inserted := false
 			for ; cur.Next != nil; cur = cur.Next {
-				if freq >= cur.Next.TermFrequency {
+				if freq > cur.Next.TermFrequency {
 					tmp := cur.Next
 					cur.Next = &Posting{
 						TermFrequency: freq,
+						DocIdx:        p.indexer.Doc,
 						DocID:         packet.DocID,
 						Next:          nil,
 					}
@@ -173,6 +175,7 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 			if !inserted {
 				cur.Next = &Posting{
 					TermFrequency: freq,
+					DocIdx:        p.indexer.Doc,
 					DocID:         packet.DocID,
 					Next:          nil,
 				}
@@ -180,9 +183,9 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 			p.indexer.Dict[term].Postings = cur
 			p.indexer.Dict[term].DocFrequency++
 		} else {
+			p.indexer.Vocabulary++
 			termID := fmt.Sprintf("%010d", p.indexer.Vocabulary)
 			p.indexer.VocabularyStore.set(termID)
-			p.indexer.Vocabulary++
 
 			p.indexer.Dict[term] = &PostingList{
 				TermID:       termID,
@@ -193,6 +196,7 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 			}
 			p.indexer.Dict[term].Postings.Next = &Posting{
 				TermFrequency: freq,
+				DocIdx:        p.indexer.Doc,
 				DocID:         packet.DocID,
 				Next:          nil,
 			}
@@ -247,6 +251,7 @@ func (p *PipeIndexProcessor) ServiceAvailable() bool {
 
 // BuildTFIDF 构造TF-IDF数据结构.
 func (p *PipeIndexProcessor) BuildTFIDF() {
+	log.Info().Msg("start to build tf-idf ...")
 	p.tfidf = TFIDF{
 		Vectors: make([]*DocVector, p.indexer.Doc),
 	}
@@ -260,9 +265,8 @@ func (p *PipeIndexProcessor) BuildTFIDF() {
 	for _, pl := range p.indexer.Dict {
 		termIdx, _ := strconv.ParseUint(pl.TermID, 10, 64)
 		for cur := pl.Postings.Next; cur != nil; cur = cur.Next {
-			docIdx, _ := strconv.ParseUint(cur.DocID, 10, 64)
-			p.tfidf.Vectors[docIdx].DocID = cur.DocID
-			p.tfidf.Vectors[docIdx].Space[termIdx] = float32(cur.TermFrequency) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
+			p.tfidf.Vectors[cur.DocIdx-1].DocID = cur.DocID
+			p.tfidf.Vectors[cur.DocIdx-1].Space[termIdx-1] = float32(cur.TermFrequency) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
 		}
 		if cur := pl.Postings.Next; cur != nil {
 			if cur.TermFrequency > p.indexer.MaxTermFrequency {
@@ -270,6 +274,7 @@ func (p *PipeIndexProcessor) BuildTFIDF() {
 			}
 		}
 	}
+	log.Info().Msg("tf-idf has been builded")
 }
 
 // BuildQueryVector 构造查询向量.
@@ -278,13 +283,10 @@ func (p *PipeIndexProcessor) BuildQueryVector(concordance map[string]uint64) *Qu
 		Space: make([]float32, p.indexer.Vocabulary),
 	}
 	D := p.indexer.Doc
-	for term := range concordance {
+	for term, freq := range concordance {
 		if pl, ok := p.indexer.Dict[term]; ok {
 			termIdx, _ := strconv.ParseUint(pl.TermID, 10, 64)
-			for cur := pl.Postings.Next; cur != nil; cur = cur.Next {
-				q.Space[termIdx] = float32(cur.TermFrequency) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
-				q.Space[termIdx] = (0.5 + (0.5*float32(cur.TermFrequency))/float32(p.indexer.MaxTermFrequency)) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
-			}
+			q.Space[termIdx-1] = (0.5 + (0.5*float32(freq))/float32(p.indexer.MaxTermFrequency)) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
 		}
 	}
 	return q
@@ -292,11 +294,16 @@ func (p *PipeIndexProcessor) BuildQueryVector(concordance map[string]uint64) *Qu
 
 // TopK 计算查询向量与文档向量集合中各个向量的相似度，并返回最相似的k个文档
 func (p *PipeIndexProcessor) TopK(k uint32, q *QueryVector) []string {
+	ret := make([]string, 0, k)
+
 	var qMagnitude float64
 	for _, x := range q.Space {
 		qMagnitude += float64(x) * float64(x)
 	}
 	qMagnitude = math.Sqrt(qMagnitude)
+	if qMagnitude == 0.0 {
+		return ret
+	}
 
 	h := new(PriorityQueue)
 	heap.Init(h)
@@ -312,21 +319,30 @@ func (p *PipeIndexProcessor) TopK(k uint32, q *QueryVector) []string {
 			dMagnitude += float64(v.Space[i]) * float64(v.Space[i])
 		}
 		dMagnitude = math.Sqrt(dMagnitude)
-		similarity = dot / (dMagnitude * qMagnitude)
+		if dMagnitude == 0.0 {
+			continue
+		}
 
+		similarity = dot / (dMagnitude * qMagnitude)
+		if similarity == 0.0 {
+			continue
+		}
+
+		y := &SimilarObject{DocID: v.DocID, Similarity: similarity}
 		if uint32(h.Len()) >= k {
-			if h.Top().(*SimilarObject).Similarity < similarity {
-				h.Pop()
-				h.Push(&SimilarObject{DocID: v.DocID, Similarity: similarity})
+			x := heap.Pop(h).(*SimilarObject)
+			if x.Similarity < similarity {
+				heap.Push(h, y)
+			} else {
+				heap.Push(h, x)
 			}
 		} else {
-			h.Push(&SimilarObject{DocID: v.DocID, Similarity: similarity})
+			heap.Push(h, y)
 		}
 	}
 
-	ret := make([]string, k)
 	for h.Len() > 0 {
-		ret = append(ret, h.Pop().(*SimilarObject).DocID)
+		ret = append(ret, heap.Pop(h).(*SimilarObject).DocID)
 	}
 
 	return ret
@@ -378,12 +394,6 @@ func (pq *PriorityQueue) Pop() interface{} {
 	item := old[n-1]
 	item.Index = -1
 	*pq = old[0 : n-1]
-	return item
-}
-
-func (pq *PriorityQueue) Top() interface{} {
-	n := len(*pq)
-	item := (*pq)[n-1]
 	return item
 }
 

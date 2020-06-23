@@ -45,5 +45,6 @@ type MySQLConfig struct {
 
 // IndexerConfig 索引器配置
 type IndexerConfig struct {
+	Load     bool   `json:"load"`
 	DumpPath string `json:"dump_path"`
 }

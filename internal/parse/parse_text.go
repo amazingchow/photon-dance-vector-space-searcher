@@ -67,6 +67,7 @@ LOOP_LABEL:
 func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.PacketChannel) {
 	p.tokenBucket <- struct{}{}
 
+	// TODO: minio是否有并发写检测机制（两个及以上的线程同时写一个同名对象）
 	path, err := p.storage.Readable(&common.File{
 		Type: packet.DocType,
 		Name: packet.DocId,
@@ -94,25 +95,27 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 		body = append(body, strings.TrimSpace(s.Text()))
 	})
 
-	if _, err = p.storage.Writable(&common.File{
-		Type: pb.DocType_TextDoc,
-		Name: packet.DocId,
-		Body: body,
-	}); err != nil {
-		log.Error().Err(err)
-		return
-	}
-	if _, err = p.storage.Put(&common.File{
-		Type: pb.DocType_TextDoc,
-		Name: packet.DocId,
-	}); err != nil {
-		log.Error().Err(err)
-		return
-	}
+	if len(body) > 0 {
+		if _, err = p.storage.Writable(&common.File{
+			Type: pb.DocType_TextDoc,
+			Name: packet.DocId,
+			Body: body,
+		}); err != nil {
+			log.Error().Err(err)
+			return
+		}
+		if _, err = p.storage.Put(&common.File{
+			Type: pb.DocType_TextDoc,
+			Name: packet.DocId,
+		}); err != nil {
+			log.Error().Err(err)
+			return
+		}
 
-	output <- &pb.Packet{
-		DocType: pb.DocType_TextDoc,
-		DocId:   packet.DocId,
+		output <- &pb.Packet{
+			DocType: pb.DocType_TextDoc,
+			DocId:   packet.DocId,
+		}
 	}
 	log.Debug().Msg("PipeParseProcessor processes one data packet")
 
