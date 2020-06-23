@@ -21,6 +21,14 @@
             "bucket": "engine-vector-space-search-service",
             "root": ""
         },
+        "mysql": {
+            "host": "127.0.0.1",
+            "port": 13306,
+            "user": "root",
+            "password": "123456",
+            "db": "mof_rpc"
+
+        },
         "indexer": {
             "dump_path": "./index.json"
         }

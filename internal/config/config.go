@@ -11,10 +11,11 @@ type ServiceConfig struct {
 type PipelineConfig struct {
 	Kafka   *KafkaConfig   `json:"kafka"`
 	Minio   *MinioConfig   `json:"minio"`
+	MySQL   *MySQLConfig   `json:"mysql"`
 	Indexer *IndexerConfig `json:"indexer"`
 }
 
-// KafkaConfig kafka连接配置
+// KafkaConfig Kafka连接配置
 type KafkaConfig struct {
 	Brokers      []string `json:"brokers"`
 	Topic        []string `json:"topic"`
@@ -23,7 +24,7 @@ type KafkaConfig struct {
 	FromOldest   bool     `json:"from_oldest"`
 }
 
-// MinioConfig minio连接配置
+// MinioConfig Minio连接配置
 type MinioConfig struct {
 	Endpoint  string `json:"endpoint"`
 	AccessKey string `json:"access_key"`
@@ -31,6 +32,15 @@ type MinioConfig struct {
 	UseSSL    bool   `json:"use_ssl"`
 	Bucket    string `json:"bucket"`
 	Root      string `json:"root"`
+}
+
+// MySQLConfig MySQL连接配置
+type MySQLConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	DB       string `json:"db"`
 }
 
 // IndexerConfig 索引器配置

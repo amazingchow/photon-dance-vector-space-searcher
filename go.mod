@@ -12,6 +12,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/huichen/sego v0.0.0-20180617034105-3f3c8a8cfacc
+	github.com/jinzhu/gorm v1.9.14
 	github.com/json-iterator/go v1.1.10
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

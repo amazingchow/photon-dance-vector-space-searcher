@@ -14,7 +14,7 @@ services:
     ports:
       - "19092:9092"
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: "10.152.26.135" # local ip
+      KAFKA_ADVERTISED_HOST_NAME: "a.b.c.d" # local ip
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_CREATE_TOPICS: "engine-vector-space-search-service:1:1"
       KAFKA_MESSAGE_MAX_BYTES: 2000000
