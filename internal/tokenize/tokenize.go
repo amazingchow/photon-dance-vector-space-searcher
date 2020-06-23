@@ -68,6 +68,10 @@ LOOP_LABEL:
 					}
 				}
 			}
+		default:
+			{
+
+			}
 		}
 	}
 	pGroup.Done()

@@ -36,10 +36,10 @@ message Packet {
 /* -------------------- request & response -------------------- */
 message QueryRequest {
   string query = 1;
-  int32 topk = 2;
+  uint32 topk = 2;
 }
 
-message QueryResponse { repeated string doc = 1; }
+message QueryResponse { repeated string docs = 1; }
 
 message GetSystemInfoRequest {}
 
@@ -49,10 +49,10 @@ enum ServiceStatus {
 }
 
 message GetSystemInfoResponse {
-  int64 document_capacity = 1;
-  int64 document = 2;
-  int64 vocabulary_capacity = 3;
-  int64 vocabulary = 4;
+  uint64 document_capacity = 1;
+  uint64 document = 2;
+  uint64 vocabulary_capacity = 3;
+  uint64 vocabulary = 4;
   ServiceStatus service_status = 5;
 }
 

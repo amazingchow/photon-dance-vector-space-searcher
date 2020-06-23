@@ -1,24 +1,28 @@
 {
-    "kafka": {
-        "brokers": [
-            "127.0.0.1:19092"
-        ],
-        "topic": [
-            "engine-vector-space-search-service"
-        ],
-        "version": "0.10.2.0",
-        "consume_group": "evsss-group",
-        "from_oldest": true
-    },
-    "minio": {
-        "endpoint": "127.0.0.1:19000",
-        "access_key": "minioadmin",
-        "secret_key": "admin12345",
-        "use_ssl": false,
-        "bucket": "engine-vector-space-search-service",
-        "root": ""
-    },
-    "indexer": {
-        "dump_path": "./index.json"
+    "http_endpoint": "localhost:18080",
+    "grpc_endpoint": "localhost:18081",
+    "pipeline": {
+        "kafka": {
+            "brokers": [
+                "127.0.0.1:19092"
+            ],
+            "topic": [
+                "engine-vector-space-search-service"
+            ],
+            "version": "0.10.2.0",
+            "consume_group": "evsss-group",
+            "from_oldest": true
+        },
+        "minio": {
+            "endpoint": "127.0.0.1:19000",
+            "access_key": "minioadmin",
+            "secret_key": "admin12345",
+            "use_ssl": false,
+            "bucket": "engine-vector-space-search-service",
+            "root": ""
+        },
+        "indexer": {
+            "dump_path": "./index.json"
+        }
     }
 }

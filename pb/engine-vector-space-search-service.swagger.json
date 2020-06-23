@@ -72,19 +72,19 @@
       "properties": {
         "document_capacity": {
           "type": "string",
-          "format": "int64"
+          "format": "uint64"
         },
         "document": {
           "type": "string",
-          "format": "int64"
+          "format": "uint64"
         },
         "vocabulary_capacity": {
           "type": "string",
-          "format": "int64"
+          "format": "uint64"
         },
         "vocabulary": {
           "type": "string",
-          "format": "int64"
+          "format": "uint64"
         },
         "service_status": {
           "$ref": "#/definitions/engine_vector_space_search_serviceServiceStatus"
@@ -99,7 +99,7 @@
         },
         "topk": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
         }
       },
       "title": "-------------------- request \u0026 response --------------------"
@@ -107,7 +107,7 @@
     "engine_vector_space_search_serviceQueryResponse": {
       "type": "object",
       "properties": {
-        "doc": {
+        "docs": {
           "type": "array",
           "items": {
             "type": "string"

@@ -43,7 +43,6 @@ type PipeIndexProcessor struct {
 
 // InvertedIndex 倒排索引数据结构
 type InvertedIndex struct {
-	mu               sync.Mutex
 	Doc              uint64                  `json:"doc"`
 	DocStore         *DocStore               `json:"doc_store"`
 	Vocabulary       uint64                  `json:"vocabulary"`
@@ -133,6 +132,10 @@ LOOP_LABEL:
 					break LOOP_LABEL
 				}
 				go p.indexing(packet)
+			}
+		default:
+			{
+
 			}
 		}
 	}
@@ -237,6 +240,11 @@ func (p *PipeIndexProcessor) MarkServiceUnavailable() {
 	atomic.StoreInt32(&(p.available), 0)
 }
 
+var (
+	// ErrServiceUnavailable 服务不可用错误
+	ErrServiceUnavailable = fmt.Errorf("service unavailable")
+)
+
 // ServiceAvailable 服务是否可用.
 func (p *PipeIndexProcessor) ServiceAvailable() bool {
 	return atomic.LoadInt32(&(p.available)) == 1
@@ -270,7 +278,7 @@ func (p *PipeIndexProcessor) BuildTFIDF() {
 }
 
 // BuildQueryVector 构造查询向量.
-func (p *PipeIndexProcessor) BuildQueryVector(concordance map[string]uint32) *QueryVector {
+func (p *PipeIndexProcessor) BuildQueryVector(concordance map[string]uint64) *QueryVector {
 	q := &QueryVector{
 		Space: make([]float32, p.indexer.Vocabulary),
 	}
@@ -288,7 +296,7 @@ func (p *PipeIndexProcessor) BuildQueryVector(concordance map[string]uint32) *Qu
 }
 
 // TopK 计算查询向量与文档向量集合中各个向量的相似度，并返回最相似的k个文档
-func (p *PipeIndexProcessor) TopK(k int, q *QueryVector) []string {
+func (p *PipeIndexProcessor) TopK(k uint32, q *QueryVector) []string {
 	var qMagnitude float64
 	for _, x := range q.Space {
 		qMagnitude += float64(x) * float64(x)
@@ -311,7 +319,7 @@ func (p *PipeIndexProcessor) TopK(k int, q *QueryVector) []string {
 		dMagnitude = math.Sqrt(dMagnitude)
 		similarity = dot / (dMagnitude * qMagnitude)
 
-		if h.Len() >= k {
+		if uint32(h.Len()) >= k {
 			if h.Top().(*SimilarObject).Similarity < similarity {
 				h.Pop()
 				h.Push(&SimilarObject{DocID: v.DocID, Similarity: similarity})
@@ -369,7 +377,7 @@ func (m *DocStore) set(docID string) {
 	m.BitSet[i>>_Shift] |= (1 << (i & _Mask))
 }
 
-func (m *DocStore) clear(docID string) {
+func (m *DocStore) clear(docID string) { // nolint
 	i, _ := strconv.ParseUint(docID, 10, 64)
 	m.BitSet[i>>_Shift] &= bits.Reverse64(1 << (i & _Mask))
 }
@@ -384,12 +392,12 @@ func (m *VocabularyStore) set(termID string) {
 	m.BitSet[i>>_Shift] |= (1 << (i & _Mask))
 }
 
-func (m *VocabularyStore) clear(termID string) {
+func (m *VocabularyStore) clear(termID string) { // nolint
 	i, _ := strconv.ParseUint(termID, 10, 64)
 	m.BitSet[i>>_Shift] &= bits.Reverse64(1 << (i & _Mask))
 }
 
-func (m *VocabularyStore) exist(termID string) bool {
+func (m *VocabularyStore) exist(termID string) bool { // nolint
 	i, _ := strconv.ParseUint(termID, 10, 64)
 	return m.BitSet[i>>_Shift]&(1<<(i&_Mask)) != 0
 }

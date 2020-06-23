@@ -54,6 +54,10 @@ LOOP_LABEL:
 					}
 				}
 			}
+		default:
+			{
+
+			}
 		}
 	}
 	pGroup.Done()
@@ -79,7 +83,7 @@ func (p *PipeStemmingProcessor) QueryApplyStemming(language common.LanguageType,
 				delete(concordance, k)
 			}
 		}
-	} else if language == common.LanguageTypeChinsese {
+	} else if language == common.LanguageTypeChinsese { // nolint
 		// 词干提取是英文语料预处理的一个步骤, 中文并不需要
 	}
 

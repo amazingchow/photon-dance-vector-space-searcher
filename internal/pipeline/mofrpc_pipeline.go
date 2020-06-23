@@ -1,7 +1,10 @@
 package pipeline
 
 import (
+	"context"
 	"sync"
+
+	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -42,7 +45,7 @@ type MOFRPCContainer struct {
 }
 
 // NewMOFRPCContainer 新建MOF-RPC数据容器.
-func NewMOFRPCContainer(cfg *conf.PipelineConfig) (*MOFRPCContainer, error) {
+func NewMOFRPCContainer(cfg *conf.PipelineConfig) *MOFRPCContainer {
 	h := &MOFRPCContainer{
 		cfg: cfg,
 	}
@@ -51,14 +54,16 @@ func NewMOFRPCContainer(cfg *conf.PipelineConfig) (*MOFRPCContainer, error) {
 
 	h.consumer, err = kafka.NewCustomConsumerGroupHandler(h.cfg.Kafka)
 	if err != nil {
-		return nil, err
+		log.Fatal().Err(err)
 	}
 
 	h.storage, err = storage.NewS3Storage(h.cfg.Minio)
 	if err != nil {
-		return nil, err
+		log.Fatal().Err(err)
 	}
-	h.storage.Init()
+	if err = h.storage.Init(); err != nil {
+		log.Fatal().Err(err)
+	}
 
 	h.parser = parse.NewPipeParseProcessor(h.storage)
 	h.parserInput = make(common.PacketChannel)
@@ -76,7 +81,7 @@ func NewMOFRPCContainer(cfg *conf.PipelineConfig) (*MOFRPCContainer, error) {
 
 	go h.process()
 
-	return h, nil
+	return h
 }
 
 func (h *MOFRPCContainer) process() {
@@ -111,6 +116,10 @@ LOOP:
 					h.indexer.MarkServiceAvailable()
 				}
 			}
+		default:
+			{
+
+			}
 		}
 	}
 	h.exit <- struct{}{}
@@ -124,8 +133,44 @@ func (h *MOFRPCContainer) Stop() {
 		close(h.parserInput)
 		h.pGroup.Wait()
 		h.indexer.Dump()
-		h.storage.Destroy()
+		h.storage.Destroy() // nolint
 	})
 	<-h.exit
 	log.Info().Msg("pipeline container has been closed")
+}
+
+// Query 利用关键词查询相似文档.
+func (h *MOFRPCContainer) Query(ctx context.Context, topk uint32, query string) ([]string, error) {
+	if !h.indexer.ServiceAvailable() {
+		return nil, indexing.ErrServiceUnavailable
+	}
+
+	concordance := make(map[string]uint64)
+
+	h.tokenizer.QueryTokenize(query, common.LanguageTypeChinsese, concordance)
+	if utils.IsContextDone(ctx) {
+		return nil, utils.ErrContextDone
+	}
+
+	h.stoper.QueryRemoveStopWords(common.LanguageTypeChinsese, concordance)
+	if utils.IsContextDone(ctx) {
+		return nil, utils.ErrContextDone
+	}
+
+	h.stemmer.QueryApplyStemming(common.LanguageTypeChinsese, concordance)
+	if utils.IsContextDone(ctx) {
+		return nil, utils.ErrContextDone
+	}
+
+	q := h.indexer.BuildQueryVector(concordance)
+	if utils.IsContextDone(ctx) {
+		return nil, utils.ErrContextDone
+	}
+
+	h.indexer.TopK(topk, q)
+	if utils.IsContextDone(ctx) {
+		return nil, utils.ErrContextDone
+	}
+
+	return nil, nil
 }

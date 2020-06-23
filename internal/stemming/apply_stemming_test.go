@@ -9,7 +9,7 @@ import (
 )
 
 func TestEnApplyStemming(t *testing.T) {
-	inConcordance := map[string]uint32{
+	inConcordance := map[string]uint64{
 		"a":           1,
 		"aaron":       1,
 		"abaissiez":   1,
@@ -31,7 +31,7 @@ func TestEnApplyStemming(t *testing.T) {
 		"abbreviated": 1,
 		"abed":        1,
 	}
-	ouConcordance := map[string]uint32{
+	ouConcordance := map[string]uint64{
 		"a":         1,
 		"aaron":     1,
 		"ab":        1,

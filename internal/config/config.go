@@ -1,5 +1,12 @@
 package conf
 
+// ServiceConfig 服务配置
+type ServiceConfig struct {
+	HTTPEndpoint string          `json:"http_endpoint"`
+	GRPCEndpoint string          `json:"grpc_endpoint"`
+	Pipeline     *PipelineConfig `json:"pipeline"`
+}
+
 // PipelineConfig 处理管道配置
 type PipelineConfig struct {
 	Kafka   *KafkaConfig   `json:"kafka"`

@@ -16,6 +16,9 @@ test:
 pb-fmt:
 	@clang-format -i ./pb/*.proto
 
+lint:
+	@golangci-lint run --skip-dirs=api --deadline=5m
+
 clean:
 	rm -f $(ALL_TARGETS)
 

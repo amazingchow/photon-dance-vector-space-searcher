@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,21 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/rs/zerolog/log"
 )
+
+var (
+	// ErrContextDone context超时错误
+	ErrContextDone = fmt.Errorf("context done")
+)
+
+// IsContextDone 检查context是否超时.
+func IsContextDone(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
+}
 
 // FileSize 计算文件大小.
 func FileSize(fn string) int64 {
