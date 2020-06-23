@@ -1,7 +1,9 @@
 syntax = "proto3";
 
 package amazingchow.engine_vector_space_search_service;
-option go_package = "./api";
+option go_package = "github.com/amazingchow/engine-vector-space-search-service/api";
+
+import "google/api/annotations.proto";
 
 enum WebStation {
   // 中华人民共和国财政部网站
@@ -29,4 +31,43 @@ message Packet {
   string doc_id = 3;
   string doc_title = 4;
   PacketDeliveryStatus delivery_status = 5;
+}
+
+/* -------------------- request & response -------------------- */
+message QueryRequest {
+  string query = 1;
+  int32 topk = 2;
+}
+
+message QueryResponse { repeated string doc = 1; }
+
+message GetSystemInfoRequest {}
+
+enum ServiceStatus {
+  Available = 0;
+  Unavailable = 1;
+}
+
+message GetSystemInfoResponse {
+  int64 document_capacity = 1;
+  int64 document = 2;
+  int64 vocabulary_capacity = 3;
+  int64 vocabulary = 4;
+  ServiceStatus service_status = 5;
+}
+
+/* -------------------- grpc gateway -------------------- */
+service QueryService {
+  rpc Query(QueryRequest) returns (QueryResponse) {
+    option (google.api.http) = {
+      post : "/v1/query"
+      body : "*"
+    };
+  }
+
+  rpc GetSystemInfo(GetSystemInfoRequest) returns (GetSystemInfoResponse) {
+    option (google.api.http) = {
+      get : "/v1/system_info"
+    };
+  }
 }
