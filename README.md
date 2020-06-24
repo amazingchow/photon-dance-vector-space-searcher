@@ -54,17 +54,31 @@
 make build
 
 # start the service
-./engine-vector-space-search-service
+./engine-vector-space-search-service --conf=config/pipeline.json --debug=false
 ```
 
 #### Example
 
+use crawler system to produce raw html docs, after engine-vector-space-search-service consumes all html docs, then  
+
+```shell
+# get system info
+curl http://127.0.0.1:18180/v1/system_info
+
+# do query
+curl -XPOST -d '{"query": "Hello World", "topk": 3}' http://127.0.0.1:18180/v1/query
+```
+
 ## Documentation
 
-## References
+### Api Design
 
-* [Design and Implementation of a Search Engine using Vector Space and PageRank](https://guangchun.files.wordpress.com/2012/05/searchenginereport.pdf)
+* refer to [swagger](pb/engine-vector-space-search-service.swagger.json).
+
+### References
+
 * [A Vector Space Model for Automatic Indexing](https://dl.acm.org/doi/pdf/10.1145/361219.361220?download=true)
+* [Design and Implementation of a Search Engine using Vector Space and PageRank](https://guangchun.files.wordpress.com/2012/05/searchenginereport.pdf)
 * [Inverted Index Implementation](https://is.muni.cz/th/hsr4u/thesis.pdf)
 
 ## Contributing

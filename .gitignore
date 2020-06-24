@@ -17,3 +17,5 @@
 /engine-vector-space-search-service
 /config/pipeline.json
 index.json
+.vscode
+*.log
