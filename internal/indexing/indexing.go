@@ -25,6 +25,8 @@ const (
 	// 支持的词汇总量上限
 	_VocabularyCapacity uint64 = 1e5
 
+	_Shards = 32
+
 	_BitPerWord uint64 = 64
 	_Shift      uint64 = 6
 	_Mask       uint64 = 0x3f
@@ -43,21 +45,29 @@ type PipeIndexProcessor struct {
 
 // InvertedIndex 倒排索引数据结构
 type InvertedIndex struct {
-	Doc              uint64                  `json:"doc"`
-	DocStore         *DocStore               `json:"doc_store"`
-	Vocabulary       uint64                  `json:"vocabulary"`
-	VocabularyStore  *VocabularyStore        `json:"vocabulary_store"`
-	Dict             map[string]*PostingList `json:"dict"` // TODO: 使用分段技术
-	MaxTermFrequency uint64                  `json:"max_term_frequency"`
+	Doc              uint64           `json:"doc"`
+	DocStore         *DocStore        `json:"doc_store"`
+	Vocabulary       uint64           `json:"vocabulary"`
+	VocabularyStore  *VocabularyStore `json:"vocabulary_store"`
+	Dict             []*Shard         `json:"dict"` // 使用分段锁技术
+	MaxTermFrequency uint64           `json:"max_term_frequency"`
+}
+
+// Shard 局部字典
+type Shard struct {
+	mu      sync.RWMutex
+	Backend map[string]*PostingList `json:"backend"`
 }
 
 // DocStore 用于存储文档记录
 type DocStore struct {
+	mu     sync.RWMutex
 	BitSet []uint64 `json:"bit_set"`
 }
 
 // VocabularyStore 用于存储词汇量记录
 type VocabularyStore struct {
+	mu     sync.RWMutex
 	BitSet []uint64 `json:"bit_set"`
 }
 
@@ -106,7 +116,7 @@ type PriorityQueue []*SimilarObject
 func NewPipeIndexProcessor(cfg *conf.IndexerConfig, storage storage.Persister) *PipeIndexProcessor {
 	p := &PipeIndexProcessor{
 		cfg:         cfg,
-		tokenBucket: make(chan struct{}, 1),
+		tokenBucket: make(chan struct{}, 20),
 		storage:     storage,
 		available:   1,
 	}
@@ -115,7 +125,12 @@ func NewPipeIndexProcessor(cfg *conf.IndexerConfig, storage storage.Persister) *
 		DocStore:        &DocStore{BitSet: make([]uint64, uint64(_DocCapacity/_BitPerWord)+1)},
 		Vocabulary:      0,
 		VocabularyStore: &VocabularyStore{BitSet: make([]uint64, uint64(_VocabularyCapacity/_BitPerWord)+1)},
-		Dict:            make(map[string]*PostingList),
+	}
+	p.indexer.Dict = make([]*Shard, _Shards)
+	for idx := 0; idx < _Shards; idx++ {
+		p.indexer.Dict[idx] = &Shard{
+			Backend: make(map[string]*PostingList),
+		}
 	}
 	log.Info().Msg("load PipeIndexProcessor plugin")
 	return p
@@ -132,7 +147,7 @@ LOOP_LABEL:
 				if !ok {
 					break LOOP_LABEL
 				}
-				p.indexing(packet)
+				go p.indexing(packet)
 			}
 		default:
 			{
@@ -151,19 +166,24 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 		return
 	}
 	p.indexer.DocStore.set(packet.DocID)
-	p.indexer.Doc++
+	atomic.AddUint64(&(p.indexer.Doc), 1)
 
 	for term, freq := range packet.Concordance {
-		_, ok := p.indexer.Dict[term]
+		shard := p.indexer.Dict[fnv_1a_32(term)&0x1f]
+		shard.mu.Lock()
+
+		docIdx := p.GetDoc()
+
+		_, ok := shard.Backend[term]
 		if ok {
-			cur := p.indexer.Dict[term].Postings
+			cur := shard.Backend[term].Postings
 			inserted := false
 			for ; cur.Next != nil; cur = cur.Next {
 				if freq > cur.Next.TermFrequency {
 					tmp := cur.Next
 					cur.Next = &Posting{
 						TermFrequency: freq,
-						DocIdx:        p.indexer.Doc,
+						DocIdx:        docIdx,
 						DocID:         packet.DocID,
 						Next:          nil,
 					}
@@ -175,32 +195,35 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 			if !inserted {
 				cur.Next = &Posting{
 					TermFrequency: freq,
-					DocIdx:        p.indexer.Doc,
+					DocIdx:        docIdx,
 					DocID:         packet.DocID,
 					Next:          nil,
 				}
 			}
-			p.indexer.Dict[term].Postings = cur
-			p.indexer.Dict[term].DocFrequency++
+			shard.Backend[term].Postings = cur
+			shard.Backend[term].DocFrequency++
 		} else {
-			p.indexer.Vocabulary++
-			termID := fmt.Sprintf("%010d", p.indexer.Vocabulary)
+			atomic.AddUint64(&(p.indexer.Vocabulary), 1)
+			termID := fmt.Sprintf("%010d", p.GetVocabulary())
 			p.indexer.VocabularyStore.set(termID)
 
-			p.indexer.Dict[term] = &PostingList{
+			shard.Backend[term] = &PostingList{
 				TermID:       termID,
 				DocFrequency: 1,
 				Postings: &Posting{
 					Next: nil,
 				},
 			}
-			p.indexer.Dict[term].Postings.Next = &Posting{
+			shard.Backend[term].Postings.Next = &Posting{
 				TermFrequency: freq,
-				DocIdx:        p.indexer.Doc,
+				DocIdx:        docIdx,
 				DocID:         packet.DocID,
 				Next:          nil,
 			}
 		}
+
+		shard.mu.Unlock()
+		p.indexer.Dict[fnv_1a_32(term)&0x1f] = shard
 	}
 
 	<-p.tokenBucket
@@ -208,6 +231,7 @@ func (p *PipeIndexProcessor) indexing(packet *common.ConcordanceWrapper) {
 
 // Dump 将索引结构持久化到存储硬件.
 func (p *PipeIndexProcessor) Dump() {
+	// TODO: 分段dump
 	var json = jsoniter.ConfigCompatibleWithStandardLibrary
 	serialization, err := json.Marshal(&(p.indexer))
 	if err != nil {
@@ -221,6 +245,7 @@ func (p *PipeIndexProcessor) Dump() {
 
 // Load 从存储硬件加载索引结构.
 func (p *PipeIndexProcessor) Load() {
+	// TODO: 分段load
 	if utils.FileExist(p.cfg.DumpPath) {
 		deserialization, err := ioutil.ReadFile(p.cfg.DumpPath)
 		if err != nil {
@@ -253,26 +278,30 @@ func (p *PipeIndexProcessor) ServiceAvailable() bool {
 func (p *PipeIndexProcessor) BuildTFIDF() {
 	log.Info().Msg("start to build tf-idf ...")
 	p.tfidf = TFIDF{
-		Vectors: make([]*DocVector, p.indexer.Doc),
+		Vectors: make([]*DocVector, p.GetDoc()),
 	}
 	var i uint64
-	for i = 0; i < p.indexer.Doc; i++ {
+	for i = 0; i < p.GetDoc(); i++ {
 		p.tfidf.Vectors[i] = &DocVector{
-			Space: make([]float32, p.indexer.Vocabulary),
+			Space: make([]float32, p.GetVocabulary()),
 		}
 	}
-	D := p.indexer.Doc
-	for _, pl := range p.indexer.Dict {
-		termIdx, _ := strconv.ParseUint(pl.TermID, 10, 64)
-		for cur := pl.Postings.Next; cur != nil; cur = cur.Next {
-			p.tfidf.Vectors[cur.DocIdx-1].DocID = cur.DocID
-			p.tfidf.Vectors[cur.DocIdx-1].Space[termIdx-1] = float32(cur.TermFrequency) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
-		}
-		if cur := pl.Postings.Next; cur != nil {
-			if cur.TermFrequency > p.indexer.MaxTermFrequency {
-				p.indexer.MaxTermFrequency = cur.TermFrequency
+	D := p.GetDoc()
+	for _, shard := range p.indexer.Dict {
+		shard.mu.RLock()
+		for _, pl := range shard.Backend {
+			termIdx, _ := strconv.ParseUint(pl.TermID, 10, 64)
+			for cur := pl.Postings.Next; cur != nil; cur = cur.Next {
+				p.tfidf.Vectors[cur.DocIdx-1].DocID = cur.DocID
+				p.tfidf.Vectors[cur.DocIdx-1].Space[termIdx-1] = float32(cur.TermFrequency) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
+			}
+			if cur := pl.Postings.Next; cur != nil {
+				if cur.TermFrequency > p.indexer.MaxTermFrequency {
+					p.indexer.MaxTermFrequency = cur.TermFrequency
+				}
 			}
 		}
+		shard.mu.RUnlock()
 	}
 	log.Info().Msg("tf-idf has been builded")
 }
@@ -280,14 +309,17 @@ func (p *PipeIndexProcessor) BuildTFIDF() {
 // BuildQueryVector 构造查询向量.
 func (p *PipeIndexProcessor) BuildQueryVector(concordance map[string]uint64) *QueryVector {
 	q := &QueryVector{
-		Space: make([]float32, p.indexer.Vocabulary),
+		Space: make([]float32, p.GetVocabulary()),
 	}
-	D := p.indexer.Doc
+	D := p.GetDoc()
 	for term, freq := range concordance {
-		if pl, ok := p.indexer.Dict[term]; ok {
+		shard := p.indexer.Dict[fnv_1a_32(term)&0x1f]
+		shard.mu.RLock()
+		if pl, ok := shard.Backend[term]; ok {
 			termIdx, _ := strconv.ParseUint(pl.TermID, 10, 64)
 			q.Space[termIdx-1] = (0.5 + (0.5*float32(freq))/float32(p.indexer.MaxTermFrequency)) * float32(math.Log2(float64(D)/float64(pl.DocFrequency)))
 		}
+		shard.mu.RUnlock()
 	}
 	return q
 }
@@ -355,7 +387,7 @@ func (p *PipeIndexProcessor) GetDocCapacity() uint64 {
 
 // GetDoc 返回文档总量.
 func (p *PipeIndexProcessor) GetDoc() uint64 {
-	return p.indexer.Doc
+	return atomic.LoadUint64(&(p.indexer.Doc))
 }
 
 // GetVocabularyCapacity 返回词汇总量上限.
@@ -365,7 +397,7 @@ func (p *PipeIndexProcessor) GetVocabularyCapacity() uint64 {
 
 // GetVocabulary 返回词汇总量.
 func (p *PipeIndexProcessor) GetVocabulary() uint64 {
-	return p.indexer.Vocabulary
+	return atomic.LoadUint64(&(p.indexer.Vocabulary))
 }
 
 func (pq PriorityQueue) Len() int {
@@ -398,31 +430,43 @@ func (pq *PriorityQueue) Pop() interface{} {
 }
 
 func (m *DocStore) set(docID string) {
+	m.mu.Lock()
 	i, _ := strconv.ParseUint(docID, 10, 64)
 	m.BitSet[i>>_Shift] |= (1 << (i & _Mask))
+	m.mu.Unlock()
 }
 
 func (m *DocStore) clear(docID string) { // nolint
+	m.mu.Lock()
 	i, _ := strconv.ParseUint(docID, 10, 64)
 	m.BitSet[i>>_Shift] &= bits.Reverse64(1 << (i & _Mask))
+	m.mu.Unlock()
 }
 
 func (m *DocStore) exist(docID string) bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	i, _ := strconv.ParseUint(docID, 10, 64)
 	return m.BitSet[i>>_Shift]&(1<<(i&_Mask)) != 0
 }
 
 func (m *VocabularyStore) set(termID string) {
+	m.mu.Lock()
 	i, _ := strconv.ParseUint(termID, 10, 64)
 	m.BitSet[i>>_Shift] |= (1 << (i & _Mask))
+	m.mu.Unlock()
 }
 
 func (m *VocabularyStore) clear(termID string) { // nolint
+	m.mu.Lock()
 	i, _ := strconv.ParseUint(termID, 10, 64)
 	m.BitSet[i>>_Shift] &= bits.Reverse64(1 << (i & _Mask))
+	m.mu.Unlock()
 }
 
 func (m *VocabularyStore) exist(termID string) bool { // nolint
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	i, _ := strconv.ParseUint(termID, 10, 64)
 	return m.BitSet[i>>_Shift]&(1<<(i&_Mask)) != 0
 }
