@@ -39,7 +39,7 @@ func FileSize(fn string) int64 {
 	return fd.Size()
 }
 
-// FileExist 检查文件是否存在.
+// FileExist 检查文件/文件夹是否存在.
 func FileExist(fn string) bool {
 	if _, err := os.Stat(fn); err != nil {
 		if os.IsNotExist(err) {

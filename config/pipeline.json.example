@@ -31,7 +31,7 @@
         },
         "indexer": {
             "load": false,
-            "dump_path": "./index.json"
+            "dump_path": "/data/indexing"
         }
     }
 }
