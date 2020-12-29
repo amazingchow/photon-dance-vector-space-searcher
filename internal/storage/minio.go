@@ -13,9 +13,9 @@ import (
 	"github.com/minio/minio-go"
 	"github.com/rs/zerolog/log"
 
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
-	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
+	conf "github.com/amazingchow/photon-dance-vector-space-searcher/internal/config"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/utils"
 )
 
 // S3Storage 提供s3持久化服务
@@ -34,9 +34,9 @@ func NewS3Storage(cfg *conf.MinioConfig) (*S3Storage, error) {
 		return nil, err
 	}
 
-	tmpDir, err := ioutil.TempDir("", "engine-vector-space-search-service")
+	tmpDir, err := ioutil.TempDir("", "photon-dance-vector-space-searcher")
 	if err != nil {
-		log.Error().Err(err).Msg("cannot create temporary dir '/tmp/engine-vector-space-search-service'")
+		log.Error().Err(err).Msg("cannot create temporary dir '/tmp/photon-dance-vector-space-searcher'")
 		return nil, err
 	}
 

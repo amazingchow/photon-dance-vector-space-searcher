@@ -1,7 +1,7 @@
 package common
 
 import (
-	pb "github.com/amazingchow/engine-vector-space-search-service/api"
+	pb "github.com/amazingchow/photon-dance-vector-space-searcher/api"
 )
 
 // LanguageType 语种类型

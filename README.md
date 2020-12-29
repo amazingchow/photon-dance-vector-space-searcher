@@ -1,51 +1,21 @@
-# engine-vector-indexing-service
-
-[![Build Status](http://img.shields.io/travis/badges/badgerbadgerbadger.svg?style=flat-square)](https://travis-ci.org/badges/badgerbadgerbadger) [![Coverage Status](http://img.shields.io/coveralls/badges/badgerbadgerbadger.svg?style=flat-square)](https://coveralls.io/r/badges/badgerbadgerbadger) [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org) 
-
-## Architecture
+# photon-dance-vector-space-searcher
 
 ![arch](doc/arch.jpeg)
-
-## Key Algorithms
-
-### Inverted Indexing
-
-![inverted-indexing](doc/inverted-indexing.jpeg)
-
-### TF-IDF and Similarity Computation
-
-* **doc vector**
-
-![doc-vector](doc/doc_vector.jpeg)
-
-* **doc vector weight**
-
-![doc-vector-weight](doc/doc_vector_weight.jpeg)
-
-* **query vector**
-
-![query-vector](doc/query_vector.jpeg)
-
-* **query vector weight**
-
-![query-vector-weight](doc/query_vector_weight.jpeg)
-
-* **similarity**
-
-![similarity](doc/similarity.jpeg)
 
 ## Get Started
 
 ### Prerequisites
 
-* OS: Linux
-* Golang: v1.12+
+```text
+* OS     : Linux
+* Golang : v1.12+
+```
 
 ### Installation
 
 #### Clone
 
-* Clone this repo to your local machine using https://github.com/amazingchow/engine-vector-space-search-service.git.
+* Clone this repo to your local machine using https://github.com/amazingchow/photon-dance-vector-space-searcher.git.
 
 #### Setup
 
@@ -54,12 +24,12 @@
 make build
 
 # start the service
-./engine-vector-space-search-service --conf=config/pipeline.json --debug=false
+./vector-space-searcher --conf=config/pipeline.json --debug=false
 ```
 
 #### Example
 
-use crawler system to produce raw html docs, after engine-vector-space-search-service consumes all html docs, then  
+use crawler system to produce raw html docs, after vector-space-searcher consumes all html docs, then  
 
 ```shell
 # get system info
@@ -73,7 +43,7 @@ curl -XPOST -d '{"query": "Hello World", "topk": 3}' http://127.0.0.1:18180/v1/q
 
 ### Api Design
 
-* refer to [swagger](pb/engine-vector-space-search-service.swagger.json).
+* refer to [swagger](pb/photon-dance-vector-space-searcher.swagger.json).
 
 ### References
 
@@ -93,11 +63,7 @@ curl -XPOST -d '{"query": "Hello World", "topk": 3}' http://127.0.0.1:18180/v1/q
 
 ### Step 3
 
-* 🔃 Create a new PR using https://github.com/amazingchow/engine-vector-space-search-service/compare!
-
-## FAQ
-
-* refer to [FAQ](FAQ.md).
+* 🔃 Create a new PR using https://github.com/amazingchow/photon-dance-vector-space-searcher/compare!
 
 ## Support
 

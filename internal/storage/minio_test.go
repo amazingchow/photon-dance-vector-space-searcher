@@ -10,9 +10,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	pb "github.com/amazingchow/engine-vector-space-search-service/api"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
-	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
+	pb "github.com/amazingchow/photon-dance-vector-space-searcher/api"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
+	conf "github.com/amazingchow/photon-dance-vector-space-searcher/internal/config"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 		AccessKey: "minioadmin",
 		SecretKey: "admin12345",
 		UseSSL:    false,
-		Bucket:    "engine-vector-space-search-service",
+		Bucket:    "photon-dance-vector-space-searcher",
 		Root:      "",
 	}
 )

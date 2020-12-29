@@ -7,7 +7,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/rs/zerolog/log"
 
-	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
+	conf "github.com/amazingchow/photon-dance-vector-space-searcher/internal/config"
 )
 
 // Client MySQL客户端

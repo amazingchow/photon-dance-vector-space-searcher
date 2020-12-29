@@ -1,0 +1,160 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "github.com/amazingchow/photon-dance-vector-space-searcher/pb/photon-dance-vector-space-searcher.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/query": {
+      "post": {
+        "operationId": "QueryService_Query",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/photon_dance_vector_space_searcherQueryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/photon_dance_vector_space_searcherQueryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "QueryService"
+        ]
+      }
+    },
+    "/v1/system_info": {
+      "get": {
+        "operationId": "QueryService_GetSystemInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/photon_dance_vector_space_searcherGetSystemInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "QueryService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "photon_dance_vector_space_searcherGetSystemInfoResponse": {
+      "type": "object",
+      "properties": {
+        "document_capacity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "document": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "vocabulary_capacity": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "vocabulary": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "service_status": {
+          "$ref": "#/definitions/photon_dance_vector_space_searcherServiceStatus"
+        }
+      }
+    },
+    "photon_dance_vector_space_searcherQueryRequest": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "topk": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "-------------------- request \u0026 response --------------------"
+    },
+    "photon_dance_vector_space_searcherQueryResponse": {
+      "type": "object",
+      "properties": {
+        "docs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "photon_dance_vector_space_searcherServiceStatus": {
+      "type": "string",
+      "enum": [
+        "Unavailable",
+        "Available"
+      ],
+      "default": "Unavailable"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

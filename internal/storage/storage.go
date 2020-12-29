@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
 )
 
 // Persister 持久化接口定义

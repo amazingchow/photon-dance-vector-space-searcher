@@ -14,10 +14,10 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
-	conf "github.com/amazingchow/engine-vector-space-search-service/internal/config"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/utils"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
+	conf "github.com/amazingchow/photon-dance-vector-space-searcher/internal/config"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/storage"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/utils"
 )
 
 const (
