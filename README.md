@@ -7,8 +7,8 @@
 ### Prerequisites
 
 ```text
-* OS     : Linux
-* Golang : v1.12+
+OS     : Linux
+Golang : v1.12+
 ```
 
 ### Installation
