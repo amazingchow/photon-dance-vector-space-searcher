@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	pb "github.com/amazingchow/engine-vector-space-search-service/api"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	pb "github.com/amazingchow/photon-dance-vector-space-searcher/api"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
 )
 
 func TestLocalStorageReadOp(t *testing.T) {

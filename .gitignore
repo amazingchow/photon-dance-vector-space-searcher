@@ -14,7 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-/engine-vector-space-search-service
-/config/pipeline.json
 .vscode
+/vector-space-searcher
+/config/*.json
 *.log

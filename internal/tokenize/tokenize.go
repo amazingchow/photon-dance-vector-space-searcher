@@ -9,9 +9,9 @@ import (
 	"github.com/huichen/sego"
 	"github.com/rs/zerolog/log"
 
-	pb "github.com/amazingchow/engine-vector-space-search-service/api"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/storage"
+	pb "github.com/amazingchow/photon-dance-vector-space-searcher/api"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/storage"
 )
 
 // PipeTokenizeProcessor 文本分词器

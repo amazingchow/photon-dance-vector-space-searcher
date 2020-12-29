@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
 )
 
 // PipeStopWordsProcessor 停词器

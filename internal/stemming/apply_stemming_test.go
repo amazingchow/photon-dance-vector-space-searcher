@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
 )
 
 func TestEnApplyStemming(t *testing.T) {

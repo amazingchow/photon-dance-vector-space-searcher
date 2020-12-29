@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
 )
 
 // LocalStorage 提供本地持久化服务

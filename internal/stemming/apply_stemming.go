@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	stemmer "github.com/agonopol/go-stem"
-	"github.com/amazingchow/engine-vector-space-search-service/internal/common"
+	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
 	"github.com/rs/zerolog/log"
 )
 
