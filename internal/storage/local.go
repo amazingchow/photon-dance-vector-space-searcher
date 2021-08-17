@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -43,12 +44,12 @@ func (p *LocalStorage) LocalPath(file *common.File) string {
 }
 
 // Writable 检查当前文件是否可写, 可以就返回待写入的持久化路径.
-func (p *LocalStorage) Writable(file *common.File) (string, error) {
+func (p *LocalStorage) Writable(ctx context.Context, file *common.File) (string, error) {
 	return p.LocalPath(file), nil
 }
 
 // Put 将当前文件写入本地磁盘.
-func (p *LocalStorage) Put(file *common.File) (string, error) {
+func (p *LocalStorage) Put(ctx context.Context, file *common.File) (string, error) {
 	path := p.LocalPath(file)
 
 	fw, err := os.Create(path)
@@ -81,7 +82,7 @@ func (p *LocalStorage) Put(file *common.File) (string, error) {
 }
 
 // Readable 检查当前文件是否可读, 可以就返回待读取的持久化路径.
-func (p *LocalStorage) Readable(file *common.File) (string, error) {
+func (p *LocalStorage) Readable(ctx context.Context, file *common.File) (string, error) {
 	path := p.LocalPath(file)
 
 	if _, err := os.Stat(path); err != nil {
@@ -93,7 +94,7 @@ func (p *LocalStorage) Readable(file *common.File) (string, error) {
 }
 
 // Get 从本地磁盘上读取当前文件.
-func (p *LocalStorage) Get(file *common.File) (string, error) {
+func (p *LocalStorage) Get(ctx context.Context, file *common.File) (string, error) {
 	path := p.LocalPath(file)
 
 	fr, err := os.Open(path)
@@ -120,12 +121,12 @@ func (p *LocalStorage) Get(file *common.File) (string, error) {
 }
 
 // Abort 放弃当前文件的持久化工作.
-func (p *LocalStorage) Abort(file *common.File) error {
+func (p *LocalStorage) Abort(ctx context.Context, file *common.File) error {
 	return nil
 }
 
 // Delete 从本地磁盘上删除当前文件.
-func (p *LocalStorage) Delete(file *common.File) error {
+func (p *LocalStorage) Delete(ctx context.Context, file *common.File) error {
 	path := p.LocalPath(file)
 
 	if err := os.Remove(path); err != nil {

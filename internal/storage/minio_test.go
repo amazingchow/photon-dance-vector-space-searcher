@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"io"
@@ -27,6 +28,8 @@ var (
 )
 
 func TestS3StorageReadWriteOp(t *testing.T) {
+	ctx := context.Background()
+
 	p, err := NewS3Storage(fakeS3Config)
 	assert.Empty(t, err)
 
@@ -53,15 +56,15 @@ func TestS3StorageReadWriteOp(t *testing.T) {
 		},
 	}
 
-	lPath, err := p.Writable(fileUpload)
+	lPath, err := p.Writable(ctx, fileUpload)
 	assert.Empty(t, err)
 	assert.Equal(t, fmt.Sprintf("%s/三部门开展三大粮食作物完全成本保险和收入保险试点工作.txt", p.tmp), lPath)
 
-	lPath, err = p.Put(fileUpload)
+	lPath, err = p.Put(ctx, fileUpload)
 	assert.Empty(t, err)
 	assert.Equal(t, fmt.Sprintf("%s/三部门开展三大粮食作物完全成本保险和收入保险试点工作.txt", p.tmp), lPath)
 
-	err = p.Abort(fileUpload)
+	err = p.Abort(ctx, fileUpload)
 	assert.Empty(t, err)
 
 	fileDownload := &common.File{
@@ -69,11 +72,11 @@ func TestS3StorageReadWriteOp(t *testing.T) {
 		Name: "三部门开展三大粮食作物完全成本保险和收入保险试点工作",
 	}
 
-	lPath, err = p.Readable(fileDownload)
+	lPath, err = p.Readable(ctx, fileDownload)
 	assert.Empty(t, err)
 	assert.Equal(t, fmt.Sprintf("%s/三部门开展三大粮食作物完全成本保险和收入保险试点工作.txt", p.tmp), lPath)
 
-	lPath, err = p.Get(fileDownload)
+	lPath, err = p.Get(ctx, fileDownload)
 	assert.Empty(t, err)
 	assert.Equal(t, fmt.Sprintf("%s/三部门开展三大粮食作物完全成本保险和收入保险试点工作.txt", p.tmp), lPath)
 
@@ -108,7 +111,7 @@ func TestS3StorageReadWriteOp(t *testing.T) {
 
 	assert.Equal(t, h1.Sum(nil), h2.Sum(nil))
 
-	err = p.Delete(fileDownload)
+	err = p.Delete(ctx, fileDownload)
 	assert.Empty(t, err)
 
 	err = p.Destroy()
