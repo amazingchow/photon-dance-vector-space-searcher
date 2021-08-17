@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"crypto/sha256"
 	"io"
 	"os"
@@ -13,6 +14,8 @@ import (
 )
 
 func TestLocalStorageReadOp(t *testing.T) {
+	ctx := context.Background()
+
 	p := NewLocalStorage("fixtures/local")
 
 	err := p.Init()
@@ -38,11 +41,11 @@ func TestLocalStorageReadOp(t *testing.T) {
 		"2018年8月20日",
 	}
 
-	path, err := p.Readable(file)
+	path, err := p.Readable(ctx, file)
 	assert.Empty(t, err)
 	assert.Equal(t, "fixtures/local/text/三部门开展三大粮食作物完全成本保险和收入保险试点工作.txt", path)
 
-	path, err = p.Get(file)
+	path, err = p.Get(ctx, file)
 	assert.Empty(t, err)
 	assert.Equal(t, "fixtures/local/text/三部门开展三大粮食作物完全成本保险和收入保险试点工作.txt", path)
 
@@ -56,6 +59,8 @@ func TestLocalStorageReadOp(t *testing.T) {
 }
 
 func TestLocalStorageWriteOp(t *testing.T) {
+	ctx := context.Background()
+
 	p := NewLocalStorage("fixtures/local")
 
 	err := p.Init()
@@ -81,11 +86,11 @@ func TestLocalStorageWriteOp(t *testing.T) {
 		},
 	}
 
-	path, err := p.Writable(fileBk)
+	path, err := p.Writable(ctx, fileBk)
 	assert.Empty(t, err)
 	assert.Equal(t, "fixtures/local/text/三部门开展三大粮食作物完全成本保险和收入保险试点工作-备份.txt", path)
 
-	path, err = p.Put(fileBk)
+	path, err = p.Put(ctx, fileBk)
 	assert.Empty(t, err)
 	assert.Equal(t, "fixtures/local/text/三部门开展三大粮食作物完全成本保险和收入保险试点工作-备份.txt", path)
 
@@ -122,7 +127,7 @@ func TestLocalStorageWriteOp(t *testing.T) {
 
 	assert.Equal(t, h1.Sum(nil), h2.Sum(nil))
 
-	err = p.Delete(fileBk)
+	err = p.Delete(ctx, fileBk)
 	assert.Empty(t, err)
 
 	err = p.Destroy()

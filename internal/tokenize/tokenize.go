@@ -1,6 +1,7 @@
 package tokenize
 
 import (
+	"context"
 	"regexp"
 	"strings"
 	"sync"
@@ -86,11 +87,11 @@ func (p *PipeTokenizeProcessor) tokenizeEnglishDoc(packet *pb.Packet, output com
 		Name: packet.DocId,
 		Body: make([]string, 0),
 	}
-	if _, err := p.storage.Readable(file); err != nil {
+	if _, err := p.storage.Readable(context.Background(), file); err != nil {
 		log.Error().Err(err)
 		return
 	}
-	if _, err := p.storage.Get(file); err != nil {
+	if _, err := p.storage.Get(context.Background(), file); err != nil {
 		log.Error().Err(err)
 		return
 	}
@@ -134,11 +135,11 @@ func (p *PipeTokenizeProcessor) tokenizeChineseDoc(packet *pb.Packet, output com
 		Name: packet.DocId,
 		Body: make([]string, 0),
 	}
-	if _, err := p.storage.Readable(file); err != nil {
+	if _, err := p.storage.Readable(context.Background(), file); err != nil {
 		log.Error().Err(err)
 		return
 	}
-	if _, err := p.storage.Get(file); err != nil {
+	if _, err := p.storage.Get(context.Background(), file); err != nil {
 		log.Error().Err(err)
 		return
 	}

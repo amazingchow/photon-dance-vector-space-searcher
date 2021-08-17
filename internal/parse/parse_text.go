@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"context"
 	"os"
 	"strings"
 	"sync"
@@ -68,7 +69,7 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 	p.tokenBucket <- struct{}{}
 
 	// TODO: minio是否有并发写检测机制（两个及以上的线程同时写一个同名对象）
-	path, err := p.storage.Readable(&common.File{
+	path, err := p.storage.Readable(context.Background(), &common.File{
 		Type: packet.DocType,
 		Name: packet.DocId,
 	})
@@ -96,7 +97,7 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 	})
 
 	if len(body) > 0 {
-		if _, err = p.storage.Writable(&common.File{
+		if _, err = p.storage.Writable(context.Background(), &common.File{
 			Type: pb.DocType_TextDoc,
 			Name: packet.DocId,
 			Body: body,
@@ -104,7 +105,7 @@ func (p *PipeParseProcessor) parseMOFRPCHTML(packet *pb.Packet, output common.Pa
 			log.Error().Err(err)
 			return
 		}
-		if _, err = p.storage.Put(&common.File{
+		if _, err = p.storage.Put(context.Background(), &common.File{
 			Type: pb.DocType_TextDoc,
 			Name: packet.DocId,
 		}); err != nil {
