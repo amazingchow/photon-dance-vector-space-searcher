@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff"
-	"github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v7"
 	"github.com/rs/zerolog/log"
 
 	"github.com/amazingchow/photon-dance-vector-space-searcher/internal/common"
