@@ -11,12 +11,13 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/huichen/sego v0.0.0-20180617034105-3f3c8a8cfacc
+	github.com/issue9/assert v1.5.0 // indirect
 	github.com/jinzhu/gorm v1.9.16
 	github.com/json-iterator/go v1.1.11
 	github.com/minio/minio-go/v7 v7.0.12
 	github.com/rs/zerolog v1.23.0
-	github.com/stretchr/testify v1.7.0
-	google.golang.org/genproto v0.0.0-20210816143620-e15ff196659d
-	google.golang.org/grpc v1.40.0
-	google.golang.org/protobuf v1.27.1
+	github.com/stretchr/testify v1.8.1
+	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
+	google.golang.org/grpc v1.53.0
+	google.golang.org/protobuf v1.28.1
 )
